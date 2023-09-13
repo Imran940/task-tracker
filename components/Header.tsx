@@ -18,7 +18,7 @@ function Header() {
   const [loading, setLoading] = useState<boolean>(false);
   const [suggestion, setSuggestion] = useState<string>("");
   const {
-    user: { name, profilePic },
+    user: { name, email, profilePic },
   } = useUserStore((state) => state);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function Header() {
             className="text-lg text-red-600 cursor-pointer"
             onClick={() => {
               auth.signOut();
-              toast(`${name} logged out!.`);
+              toast(`${name ? name : email} logged out!.`);
             }}
           >
             Logout
@@ -69,7 +69,7 @@ function Header() {
 
           <Avatar
             {...(profilePic && { src: profilePic })}
-            name={name!}
+            name={name ? name : email?.split("@")[0]}
             round
             color="#0055d1"
             size="50"

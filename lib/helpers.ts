@@ -120,3 +120,8 @@ export const getImageUrl = async (image: Image) => {
   const url = storage.getFileView(image.bucketId, image.fileId);
   return url;
 };
+
+export function isValidEmail(email = "") {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}

@@ -11,6 +11,7 @@ export default function Home() {
   const router = useRouter();
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
+      console.log({ user });
       if (user) {
         setUserData({
           name: user.displayName,
