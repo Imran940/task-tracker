@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+import { StorageReference } from "firebase/storage";
 import { NullLiteral } from "typescript";
 
 interface Board {
@@ -9,16 +11,50 @@ interface Board {
 
 export type TypeColumns = "todo" | "inprogress" | "done";
 
+export type Priority = "low" | "medium" | "high";
+
 interface Todo {
-  $id: string;
-  $createdAt: string;
+  id: string;
   title: string;
+  description?: string;
+  startDate: DateType;
+  endDate: DateType;
   status: TypeColumns;
-  image?: Image;
+  assignee: string;
+  priority: Priority;
+  images?: Image[];
+  createdAt: DateType;
 }
 
 export interface Image {
-  bucketId: string;
-  fileId: string;
-  imageUrl?: string;
+  imageRef: StorageReference;
+  imageUrl: string;
+}
+
+export type ProjectRole = "viewer" | "editor" | "owner";
+
+export interface sendMailPayload {
+  name: string;
+  role: ProjectRole;
+  fromEmail: string;
+  toEmail: string;
+  ownerName: string;
+}
+
+export interface defaultUserType {
+  email: string;
+  role?: ProjectRole;
+  name: string;
+  signupMethods: ("google" | "email")[];
+}
+
+export interface userType extends defaultUserType {
+  invitedUsers?: (defaultUserType & { id: UUID; status: string })[];
+  invitedBy?: string;
+  tasks?: Todo[];
+}
+
+export interface ModalState {
+  open: boolean;
+  loading: boolean;
 }

@@ -1,5 +1,15 @@
 import { ID, databases, storage } from "@/appwrite";
-import { Board, Image, Todo, TypeColumns } from "@/typings";
+import { db } from "@/firebase";
+import {
+  Board,
+  Image,
+  ProjectRole,
+  Todo,
+  TypeColumns,
+  sendMailPayload,
+  userType,
+} from "@/typings";
+import { collection, doc, getDoc, setDoc } from "firebase/firestore";
 
 export const getTodosGroupedByColumn = async () => {
   const data = await databases.listDocuments(
@@ -74,16 +84,13 @@ export const groupTasksByStatus = (todos: Todo[]) => {
 
   if (todos.length) {
     todos.forEach((todo: Todo, index: number) => {
-      groupColumnByType[todo.status]?.push({
-        ...todo,
-        //@ts-ignore ignore todo.image
-        ...(todo.image && { image: JSON.parse(todo.image) }),
-      });
+      groupColumnByType[todo.status]?.push(todo);
     });
   }
 
   return groupColumnByType;
 };
+
 export const fetchSuggestion = async (allTasks: Todo[] | undefined) => {
   try {
     let result: any = {};
@@ -103,6 +110,18 @@ export const fetchSuggestion = async (allTasks: Todo[] | undefined) => {
   } catch (err) {
     console.log(err);
   }
+};
+
+export const sendEmail = async (payload: sendMailPayload) => {
+  const res = await fetch("/api/send_email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ payload }),
+  });
+  const data = await res.json();
+  return data.data;
 };
 
 export const uploadImage = async (file: File) => {
@@ -125,3 +144,61 @@ export function isValidEmail(email = "") {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
+
+export const getUserFromFirestore = async (email: string) => {
+  if (!email) return null;
+  let data;
+  const docRef = doc(db, "users", email);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    // let value = docSnap.data();
+    // if (value.signupMethods?.includes(method)) {
+    //   data = value;
+    // }
+    data = docSnap.data();
+  }
+  return data;
+};
+
+export const createUserInFirestore = async ({
+  email,
+  role = "viewer",
+  name,
+  invitedUsers = [],
+  signupMethods = [],
+  invitedBy,
+}: userType) => {
+  if (!email) return;
+  const usersRef = collection(db, "users");
+  await setDoc(doc(usersRef, email), {
+    email,
+    role,
+    name,
+    invitedUsers,
+    signupMethods,
+    ...(invitedBy && { invitedBy }),
+  });
+};
+
+export const updateUserInFirestore = async (
+  email: string,
+  payload: Partial<userType>
+) => {
+  if (!email) return;
+  const usersRef = doc(db, "users", email);
+  await setDoc(usersRef, payload, { merge: true });
+};
+
+// export const addTaskToFirestore = async ({
+//   task,
+//   email,
+// }: {
+//   task: Todo;
+//   email: string;
+// }) => {
+//   try {
+
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };

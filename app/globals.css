@@ -2,3 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+::placeholder {
+  color: black !important;
+  font-size: 14px;
+}
+
+.ant-picker-ok .ant-btn-primary{
+  background-color: #1677ff;
+}

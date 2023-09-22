@@ -3,16 +3,16 @@ import { getTodosGroupedByColumn, groupTasksByStatus } from "@/lib/helpers";
 import { Board, Todo, TypeColumns } from "@/typings";
 import { todo } from "node:test";
 import { create } from "zustand";
+import { useUserStore } from "./UserStore";
 
 interface BoardTypes {
   board: Board;
   tempBoard?: Board;
-  getBoard: () => void;
+  getBoard: (tasks: Todo[]) => void;
   setBoardState: (board: Board) => void;
   updateTaskInDB: (todo: Partial<Todo>) => void;
   searchString: string;
-  setSearchString: (searchString: string) => void;
-  allTasks?: Todo[];
+  setSearchString: (searchString: string, tasks: Todo[]) => void;
   deleteTask: ({
     taskIndex,
     todo,
@@ -29,21 +29,21 @@ export const useBoardStore = create<BoardTypes>((set, get) => ({
     todo: [],
     inprogress: [],
     done: [],
-    columns: [],
+    columns: ["todo", "inprogress", "done"],
   },
-  getBoard: async () => {
-    const { result, allTasks } = await getTodosGroupedByColumn();
+  getBoard: async (tasks) => {
+    // const { result, allTasks } = await getTodosGroupedByColumn();
+    const result = groupTasksByStatus(tasks!);
     set({
       board: { ...result, columns: ["todo", "inprogress", "done"] },
-      allTasks,
     });
   },
-  setSearchString: (value) => {
+  setSearchString: (value, tasks) => {
     if (!value) {
       set({ tempBoard: undefined, searchString: "" });
       return;
     }
-    const copiedAllTasks = [...get().allTasks!];
+    const copiedAllTasks = [...tasks!];
     const filteredTasks = copiedAllTasks.filter((c) =>
       c.title.toLowerCase().includes(value.toLowerCase())
     );

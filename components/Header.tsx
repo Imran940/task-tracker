@@ -1,7 +1,6 @@
 "use client";
 
 import { auth } from "@/firebase";
-import { fetchSuggestion } from "@/lib/helpers";
 import { useBoardStore } from "@/store/BoardStore";
 import { useUserStore } from "@/store/UserStore";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
@@ -10,6 +9,8 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import Avatar from "react-avatar";
 import { toast } from "react-toastify";
+import { ModalState } from "@/typings";
+import InviteModal from "@/modals/InviteModal";
 
 function Header() {
   const { setSearchString, searchString, board, allTasks } = useBoardStore(
@@ -18,8 +19,12 @@ function Header() {
   const [loading, setLoading] = useState<boolean>(false);
   const [suggestion, setSuggestion] = useState<string>("");
   const {
-    user: { name, email, profilePic },
+    user: { name, email, profilePic, role, invitedUsers = [], tasks },
   } = useUserStore((state) => state);
+  const [inviteModal, setInviteModal] = useState<ModalState>({
+    open: false,
+    loading: false,
+  });
 
   useEffect(() => {
     //if (board.columns.size == 0) return;
@@ -33,6 +38,10 @@ function Header() {
 
   return (
     <header>
+      <InviteModal
+        inviteModalState={inviteModal}
+        setInviteModal={setInviteModal}
+      />
       <div className="flex flex-col md:flex-row items-center p-5 bg-gray-500/10 rounded-b-2xl ">
         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-pink-400 to-[#0055d1] rounded-md filter blur-3xl opacity-50 -z-50" />
         <Image
@@ -44,10 +53,20 @@ function Header() {
         />
 
         <div className="flex items-center space-x-5 flex-1 justify-end w-full">
+          {role == "owner" ? (
+            <span
+              onClick={() =>
+                setInviteModal((prevValue) => ({ ...prevValue, open: true }))
+              }
+              className="text-lg text-blue-600 cursor-pointer"
+            >
+              Invite
+            </span>
+          ) : null}
           <span
             className="text-lg text-red-600 cursor-pointer"
-            onClick={() => {
-              auth.signOut();
+            onClick={async () => {
+              await auth.signOut();
               toast(`${name ? name : email} logged out!.`);
             }}
           >
@@ -60,7 +79,7 @@ function Header() {
               placeholder="Search.."
               className="flex-1 outline-none p-2"
               value={searchString}
-              onChange={(e) => setSearchString(e.target.value)}
+              onChange={(e) => setSearchString(e.target.value, tasks!)}
             />
             <button type="submit" hidden>
               Search

@@ -6,38 +6,41 @@ import { create } from "zustand";
 interface ModalState {
   isOpen: boolean;
   toggleModal: () => void;
-  addTaskFields: {
-    title: string;
-    taskType: TypeColumns;
-    image: File | null;
-  };
-  setAddTaskFields: (key: string, value: string | File | null) => void;
+  taskFields: Todo;
+  setTaskFields: (value: Partial<Todo>) => void;
   resetAddTaskFields: () => void;
   addTask: (board: Board) => any;
 }
 
+const defaultTaskFieldValues: Todo = {
+  id: "",
+  title: "",
+  description: "",
+  startDate: null,
+  endDate: null,
+  status: "todo",
+  assignee: "",
+  priority: "low",
+  createdAt: null,
+  images: [],
+};
+
 export const useModalStore = create<ModalState>((set, get) => ({
   isOpen: false,
   toggleModal: () => set({ isOpen: !get().isOpen }),
-  addTaskFields: {
-    title: "",
-    taskType: "todo",
-    image: null,
-  },
-  setAddTaskFields: (key, value) => {
+  taskFields: { ...defaultTaskFieldValues },
+  setTaskFields: (value) => {
     set({
-      addTaskFields: {
-        ...get().addTaskFields,
-        [key]: value,
+      taskFields: {
+        ...get().taskFields,
+        ...value,
       },
     });
   },
   resetAddTaskFields: () =>
     set({
-      addTaskFields: {
-        title: "",
-        taskType: "todo",
-        image: null,
+      taskFields: {
+        ...defaultTaskFieldValues,
       },
     }),
   addTask: async (board) => {

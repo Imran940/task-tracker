@@ -46,7 +46,7 @@ function TodoCard({
         </button>
       </div>
 
-      {todo.image?.imageUrl && (
+      {/* {todo.images?.imageUrl && (
         <div className="h-full w-full rounded-b-md">
           <Image
             src={todo.image.imageUrl}
@@ -56,7 +56,7 @@ function TodoCard({
             className="w-full object-contain rounded-b-md"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 }

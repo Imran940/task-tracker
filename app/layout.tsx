@@ -1,7 +1,7 @@
-import Modal from "@/components/Modal";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import TaskModal from "@/modals/TaskModal";
 
 export const metadata = {
   title: "Trello Clone",
@@ -17,7 +17,6 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-[#f5f6f8]">
         {children}
-        <Modal />
         <ToastContainer />
       </body>
     </html>
