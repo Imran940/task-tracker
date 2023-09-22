@@ -26,6 +26,7 @@ import {
 import { Button } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import { parse } from "url";
+import { userType } from "@/typings";
 
 const defaultLoginValue = { email: "", password: "" };
 function login() {

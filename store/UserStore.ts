@@ -1,7 +1,7 @@
 import { Board, ProjectRole, Todo, defaultUserType, userType } from "@/typings";
 import { UUID } from "crypto";
 import { create } from "zustand";
-import { groupTasksByStatus } from "@/lib/helpers";
+import { groupTasksByStatus, mergeAllTasks } from "@/lib/helpers";
 interface UserDetailsState {
   name: string | null;
   email: string | null;
@@ -22,6 +22,9 @@ interface UserState {
   setLogOut: () => void;
   board: Board;
   setBoard: (board: Board) => void;
+  setSearchString: (value: string, tasks: Todo[]) => void;
+  tempBoard?: Board;
+  searchString?: string;
 }
 const defaultUserValue: UserDetailsState = {
   name: "",
@@ -48,9 +51,28 @@ export const useUserStore = create<UserState>((set, get) => ({
     sessionStorage.setItem("isLogin", "true");
   },
   setBoard: (board) => {
+    const newBoard = { ...board };
+    delete newBoard.columns;
+    console.log({ board, newBoard });
     set({
       board,
+      user: {
+        ...get().user,
+        tasks: mergeAllTasks(newBoard),
+      },
     });
+  },
+  setSearchString: (value, tasks) => {
+    if (!value) {
+      set({ tempBoard: undefined, searchString: "" });
+      return;
+    }
+    const copiedAllTasks = [...tasks!];
+    const filteredTasks = copiedAllTasks.filter((c) =>
+      c.title.toLowerCase().includes(value.toLowerCase())
+    );
+
+    set({ searchString: value, tempBoard: groupTasksByStatus(filteredTasks) });
   },
   setLogOut: () => {
     set({

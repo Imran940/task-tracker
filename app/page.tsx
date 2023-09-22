@@ -5,6 +5,7 @@ import { auth } from "@/firebase";
 import { getUserFromFirestore } from "@/lib/helpers";
 import { useBoardStore } from "@/store/BoardStore";
 import { useUserStore } from "@/store/UserStore";
+import { userType } from "@/typings";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -15,7 +16,7 @@ export default function Home() {
   );
   // const { getBoard } = useBoardStore((state) => state);
   const router = useRouter();
-  console.log("called");
+
   useEffect(() => {
     auth.onAuthStateChanged(async (user) => {
       const data = await getUserFromFirestore(user?.email!);
@@ -25,7 +26,11 @@ export default function Home() {
         setLogOut();
         router.push("/login");
       } else if (user) {
-        console.log({ user });
+        //check for invitedBy field
+        let ownerUser;
+        if (data.invitedBy) {
+          ownerUser = await getUserFromFirestore(data.invitedBy);
+        }
         const userData = {
           name: user.displayName ? user.displayName : data?.name,
           email: user.email,
@@ -36,15 +41,13 @@ export default function Home() {
           ...(data?.invitedUsers?.length && {
             invitedUsers: data?.invitedUsers,
           }),
-          ...(data?.tasks?.length && {
-            tasks: data?.tasks.map((t) => ({
-              ...t,
-              images: t.images.map((ti) => ({
-                ...ti,
-                imageRef: JSON.parse(ti.imageRef),
-              })),
-            })),
-          }),
+          ...(data?.tasks?.length
+            ? {
+                tasks: data?.tasks,
+              }
+            : ownerUser?.tasks.length && {
+                tasks: ownerUser.tasks,
+              }),
         };
         setUserData(userData);
         //getBoard(userData.tasks);

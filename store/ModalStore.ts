@@ -7,9 +7,13 @@ interface ModalState {
   isOpen: boolean;
   toggleModal: () => void;
   taskFields: Todo;
-  setTaskFields: (value: Partial<Todo>) => void;
+  setTaskFields: (
+    value: Partial<Todo>,
+    openType?: "edit" | "add" | "view"
+  ) => void;
   resetAddTaskFields: () => void;
   addTask: (board: Board) => any;
+  openType?: "edit" | "add" | "view";
 }
 
 const defaultTaskFieldValues: Todo = {
@@ -27,14 +31,16 @@ const defaultTaskFieldValues: Todo = {
 
 export const useModalStore = create<ModalState>((set, get) => ({
   isOpen: false,
+  openType: "view",
   toggleModal: () => set({ isOpen: !get().isOpen }),
   taskFields: { ...defaultTaskFieldValues },
-  setTaskFields: (value) => {
+  setTaskFields: (value, openType = "view") => {
     set({
       taskFields: {
-        ...get().taskFields,
+        ...defaultTaskFieldValues,
         ...value,
       },
+      openType,
     });
   },
   resetAddTaskFields: () =>

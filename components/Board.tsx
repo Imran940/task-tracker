@@ -10,19 +10,22 @@ import { updateUserInFirestore } from "@/lib/helpers";
 function Board() {
   // const { getBoard, board, setBoardState, updateTaskInDB, tempBoard } =
   //   useBoardStore((state) => state);
+
+  const { updateTaskInDB } = useBoardStore((state) => state);
   const {
     user: { tasks, email },
     user,
     board,
     setBoard,
     setUserData,
+    tempBoard,
   } = useUserStore((state) => state);
 
   // useEffect(() => {
   //   if (tasks?.length) getBoard(tasks);
   // }, [tasks]);
 
-  console.log({ board });
+  console.log({ boardInUi: board });
   const handleOnDragEnd = async (result: DropResult) => {
     const { destination, type, source } = result;
     console.log(result);
@@ -71,18 +74,18 @@ function Board() {
         if (newTasks.length) {
           const index = newTasks.findIndex((nt) => nt.id == updatedTask.id);
           newTasks[index].status = updatedTask.status;
-          await updateUserInFirestore(email!, { tasks: newTasks });
+          updateUserInFirestore(email!, { tasks: newTasks });
         }
 
         //updating to the global store
-        let newUser = { ...user };
-        newUser.tasks = newTasks;
-        setUserData(newUser);
-        // setBoard({
-        //   ...board,
-        //   [sourceColumn]: sourceColTodos,
-        //   [destinationColumn]: destionationColTodos,
-        // });
+        // let newUser = { ...user };
+        // newUser.tasks = newTasks;
+        // setUserData(newUser);
+        setBoard({
+          ...board,
+          [sourceColumn]: sourceColTodos,
+          [destinationColumn]: destionationColTodos,
+        });
       }
     }
   };
@@ -98,7 +101,12 @@ function Board() {
             ref={provided.innerRef}
           >
             {board.columns!?.map((id, index) => (
-              <Column key={id} id={id} todos={board[id]} index={index} />
+              <Column
+                key={id}
+                id={id}
+                todos={tempBoard?.[id] ? tempBoard[id] : board[id]}
+                index={index}
+              />
             ))}
           </div>
         )}

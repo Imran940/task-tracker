@@ -11,33 +11,38 @@ import Avatar from "react-avatar";
 import { toast } from "react-toastify";
 import { ModalState } from "@/typings";
 import InviteModal from "@/modals/InviteModal";
+import { roleAccess } from "@/lib/helpers";
+import { Popconfirm } from "antd";
 
 function Header() {
-  const { setSearchString, searchString, board, allTasks } = useBoardStore(
-    (state) => state
-  );
+  // const { setSearchString, searchString, board } = useBoardStore(
+  //   (state) => state
+  // );
   const [loading, setLoading] = useState<boolean>(false);
   const [suggestion, setSuggestion] = useState<string>("");
   const {
     user: { name, email, profilePic, role, invitedUsers = [], tasks },
+    setSearchString,
+    searchString,
+    tempBoard,
   } = useUserStore((state) => state);
   const [inviteModal, setInviteModal] = useState<ModalState>({
     open: false,
     loading: false,
   });
 
-  useEffect(() => {
-    //if (board.columns.size == 0) return;
-    // setLoading(true);
-    // (async () => {
-    //   const suggestion = await fetchSuggestion(allTasks);
-    //   setSuggestion(suggestion);
-    //   setLoading(false);
-    // })();
-  }, [board]);
+  // useEffect(() => {
+  //   //if (board.columns.size == 0) return;
+  //   // setLoading(true);
+  //   // (async () => {
+  //   //   const suggestion = await fetchSuggestion(allTasks);
+  //   //   setSuggestion(suggestion);
+  //   //   setLoading(false);
+  //   // })();
+  // }, [board]);
 
   return (
-    <header>
+    <header className="mb-10">
       <InviteModal
         inviteModalState={inviteModal}
         setInviteModal={setInviteModal}
@@ -53,25 +58,40 @@ function Header() {
         />
 
         <div className="flex items-center space-x-5 flex-1 justify-end w-full">
-          {role == "owner" ? (
+          {roleAccess[role!]?.includes("invite") ? (
+            <span
+              onClick={() =>
+                setInviteModal((prevValue) => ({ ...prevValue, open: true }))
+              }
+              className="text-lg cursor-pointer"
+            >
+              Show Members
+            </span>
+          ) : null}
+          {roleAccess[role!]?.includes("invite") ? (
             <span
               onClick={() =>
                 setInviteModal((prevValue) => ({ ...prevValue, open: true }))
               }
               className="text-lg text-blue-600 cursor-pointer"
             >
-              Invite
+              Add Member
             </span>
           ) : null}
-          <span
-            className="text-lg text-red-600 cursor-pointer"
-            onClick={async () => {
+
+          <Popconfirm
+            title="Are you sure that you want to logout?"
+            okButtonProps={{
+              style: { background: "rgb(37 99 235)" },
+            }}
+            onConfirm={async () => {
               await auth.signOut();
               toast(`${name ? name : email} logged out!.`);
             }}
           >
-            Logout
-          </span>
+            <span className="text-lg text-red-600 cursor-pointer">Logout</span>
+          </Popconfirm>
+
           <form className="flex items-center space-x-5 bg-white rounded-md p-2 shadow-md flex-1 md:flex-initial">
             <MagnifyingGlassIcon className="h-6 w-6 text-gray-400" />
             <input
@@ -96,7 +116,7 @@ function Header() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center px-5 md:py-5 py-2">
+      {/* <div className="flex items-center justify-center px-5 md:py-5 py-2">
         <p className="flex items-center text-sm font-light pr-5 p-5  rounded-xl w-fit bg-white italic max-w-3xl text-[#0055d1] shadow-xl">
           <UserCircleIcon
             className={`inline-block h-10 w-10 mr-1 text-[#0055d1] ${
@@ -107,7 +127,7 @@ function Header() {
             ? suggestion
             : "GPT is summarising your tasks for the day"}
         </p>
-      </div>
+      </div> */}
     </header>
   );
 }

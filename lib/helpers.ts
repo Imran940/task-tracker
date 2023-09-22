@@ -1,6 +1,7 @@
 import { ID, databases, storage } from "@/appwrite";
 import { db } from "@/firebase";
 import {
+  Access,
   Board,
   Image,
   ProjectRole,
@@ -67,7 +68,7 @@ export const getTodosGroupedByColumn = async () => {
 export const mergeAllTasks = (board: Board) => {
   const allTodos = Object.values(board);
   let result: Todo[] = [];
-  if (allTodos.length) {
+  if (allTodos?.length) {
     allTodos.forEach((item) => {
       result = [...result, ...item];
     });
@@ -82,7 +83,7 @@ export const groupTasksByStatus = (todos: Todo[]) => {
     done: [],
   };
 
-  if (todos.length) {
+  if (todos?.length) {
     todos.forEach((todo: Todo, index: number) => {
       groupColumnByType[todo.status]?.push(todo);
     });
@@ -202,3 +203,12 @@ export const updateUserInFirestore = async (
 //     console.log(err);
 //   }
 // };
+
+const AllAccesses: Access[] = ["add", "edit", "delete", "invite"];
+const EditorUserAccesses: Access[] = ["edit", "add"];
+
+export const roleAccess: Record<ProjectRole, Access[]> = {
+  editor: EditorUserAccesses,
+  viewer: [],
+  owner: AllAccesses,
+};

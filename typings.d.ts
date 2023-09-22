@@ -13,14 +13,16 @@ export type TypeColumns = "todo" | "inprogress" | "done";
 
 export type Priority = "low" | "medium" | "high";
 
+export type Access = "edit" | "add" | "invite" | "delete";
+
 interface Todo {
   id: string;
   title: string;
   description?: string;
-  startDate: DateType;
-  endDate: DateType;
+  startDate: string | null;
+  endDate: string | null;
   status: TypeColumns;
-  assignee: string;
+  assignee: { name: string; email: string };
   priority: Priority;
   images?: Image[];
   createdAt: DateType;
@@ -45,7 +47,7 @@ export interface defaultUserType {
   email: string;
   role?: ProjectRole;
   name: string;
-  signupMethods: ("google" | "email")[];
+  signupMethods?: ("google" | "email")[];
 }
 
 export interface userType extends defaultUserType {

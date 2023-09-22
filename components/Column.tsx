@@ -75,15 +75,13 @@ function Column({ id, todos, index }: Props) {
                       );
                     })}
 
-                    {provided.placeholder}
-
                     {user.role != "viewer" ? (
                       <div>
                         <button className="text-green-500 hover:text-green-600">
                           <PlusCircleIcon
                             onClick={() => {
                               toggleModal();
-                              setTaskFields({ status: id });
+                              setTaskFields({ status: id }, "add");
                             }}
                             className="h-10 w-10"
                           />
