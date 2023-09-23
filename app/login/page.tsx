@@ -26,7 +26,7 @@ import { parse } from "url";
 import { InvitedUserType } from "@/typings";
 
 const defaultLoginValue = { email: "", password: "" };
-function Login() {
+function Page() {
   const [loginData, setLoginData] = useState<{
     name?: string | null;
     email: string;
@@ -45,8 +45,11 @@ function Login() {
   const [showInvitedView, setShowInvitedView] = useState(false);
   const { email, password, name } = loginData;
   const { loginLoading, registerLoading, resetLoading } = loadingState;
-  const storedName = window.localStorage.getItem("name");
-  const params = parse(window.location.search, true);
+  const storedName =
+    typeof window !== undefined && window.localStorage
+      ? localStorage.getItem("name")
+      : "";
+  const params = parse(location.search, true);
   const { ownerEmail, userEmail } = params.query || {};
 
   useEffect(() => {
@@ -54,9 +57,12 @@ function Login() {
       router.push("/");
       return;
     }
-    const storedEmail = window.localStorage.getItem("email");
-    const actionMode = window.localStorage.getItem("actionMode");
-
+    let storedEmail = "";
+    let actionMode = "";
+    if (typeof window !== "undefined" && window.localStorage) {
+      storedEmail = localStorage.getItem("email")!;
+      actionMode = localStorage.getItem("actionMode")!;
+    }
     if (storedEmail && actionMode == "register") {
       if (params.query.apiKey) {
         (async () => {
@@ -82,7 +88,8 @@ function Login() {
     } else if (storedEmail) {
       // password reset
       setLoginData((prevVaue) => ({ ...prevVaue, email: storedEmail }));
-      window.localStorage.clear();
+      if (typeof window !== "undefined" && window.localStorage)
+        localStorage.clear();
       setShowSignUp(false);
     } else if (ownerEmail && userEmail) {
       setShowInvitedView(true);
@@ -151,13 +158,15 @@ function Login() {
         }
 
         toast("password set successfullyt", { type: "success" });
-        window.localStorage.clear();
+        if (typeof window !== "undefined" && window.localStorage)
+          localStorage.clear();
         router.push("/");
       } else if (showSignUp && !showInvitedView) {
-        window.localStorage.setItem("email", email);
-        window.localStorage.setItem("name", name!);
-        window.localStorage.setItem("actionMode", "register");
-
+        if (typeof window !== "undefined" && window.localStorage) {
+          localStorage.setItem("email", email);
+          localStorage.setItem("name", name!);
+          localStorage.setItem("actionMode", "register");
+        }
         const userData = await getUserFromFirestore(email);
         if (userData?.signupMethods.includes("email")) {
           toast(`User already exist with this Email-${email}`);
@@ -167,7 +176,8 @@ function Login() {
               ? { registerLoading: false }
               : { loginLoading: false }),
           }));
-          window.localStorage.clear();
+          if (typeof window !== "undefined" && window.localStorage)
+            localStorage.clear();
           return;
         }
         await sendSignInLinkToEmail(auth, email, {
@@ -366,7 +376,8 @@ function Login() {
                     handleCodeInApp: true,
                   });
                   toast(`Sent the password reset link to your ${email}`);
-                  window.localStorage.setItem("email", email);
+                  if (typeof window !== "undefined" && window.localStorage)
+                    localStorage.setItem("email", email);
                   setLoadingState((prevLoading) => ({
                     ...prevLoading,
                     resetLoading: false,
@@ -465,4 +476,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Page;

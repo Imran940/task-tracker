@@ -3,7 +3,6 @@ import Board from "@/components/Board";
 import { auth } from "@/firebase";
 import { getUserFromFirestore } from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
-import { User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
