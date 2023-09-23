@@ -1,4 +1,5 @@
 "use client";
+
 import { auth, googleAuthProvider } from "@/firebase";
 import {
   signInWithEmailAndPassword,
@@ -88,8 +89,10 @@ function Page() {
     } else if (storedEmail) {
       // password reset
       setLoginData((prevVaue) => ({ ...prevVaue, email: storedEmail }));
-      if (typeof window !== "undefined" && window.localStorage)
+      if (typeof window !== "undefined" && window.localStorage) {
         localStorage.clear();
+      }
+
       setShowSignUp(false);
     } else if (ownerEmail && userEmail) {
       setShowInvitedView(true);
@@ -158,8 +161,10 @@ function Page() {
         }
 
         toast("password set successfullyt", { type: "success" });
-        if (typeof window !== "undefined" && window.localStorage)
+        if (typeof window !== "undefined" && window.localStorage) {
           localStorage.clear();
+        }
+
         router.push("/");
       } else if (showSignUp && !showInvitedView) {
         if (typeof window !== "undefined" && window.localStorage) {
@@ -176,8 +181,10 @@ function Page() {
               ? { registerLoading: false }
               : { loginLoading: false }),
           }));
-          if (typeof window !== "undefined" && window.localStorage)
+          if (typeof window !== "undefined" && window.localStorage) {
             localStorage.clear();
+          }
+
           return;
         }
         await sendSignInLinkToEmail(auth, email, {
@@ -376,8 +383,10 @@ function Page() {
                     handleCodeInApp: true,
                   });
                   toast(`Sent the password reset link to your ${email}`);
-                  if (typeof window !== "undefined" && window.localStorage)
+                  if (typeof window !== "undefined" && window.localStorage) {
                     localStorage.setItem("email", email);
+                  }
+
                   setLoadingState((prevLoading) => ({
                     ...prevLoading,
                     resetLoading: false,
