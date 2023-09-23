@@ -41,6 +41,7 @@ export interface sendMailPayload {
   fromEmail: string;
   toEmail: string;
   ownerName: string;
+  message?: string;
 }
 
 export interface defaultUserType {
@@ -50,8 +51,12 @@ export interface defaultUserType {
   signupMethods?: ("google" | "email")[];
 }
 
+export type InvitedUserType = defaultUserType & {
+  id: UUID | string;
+  status: "pending" | "active" | "block";
+};
 export interface userType extends defaultUserType {
-  invitedUsers?: (defaultUserType & { id: UUID; status: string })[];
+  invitedUsers?: InvitedUserType[];
   invitedBy?: string;
   tasks?: Todo[];
 }

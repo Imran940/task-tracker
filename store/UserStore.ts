@@ -1,4 +1,11 @@
-import { Board, ProjectRole, Todo, defaultUserType, userType } from "@/typings";
+import {
+  Board,
+  InvitedUserType,
+  ProjectRole,
+  Todo,
+  defaultUserType,
+  userType,
+} from "@/typings";
 import { UUID } from "crypto";
 import { create } from "zustand";
 import { groupTasksByStatus, mergeAllTasks } from "@/lib/helpers";
@@ -9,10 +16,7 @@ interface UserDetailsState {
   emailVerified: boolean;
   profilePic?: string | null;
   role?: ProjectRole;
-  invitedUsers?: (defaultUserType & {
-    id: UUID;
-    status: "pending" | "active" | "block";
-  })[];
+  invitedUsers?: InvitedUserType[];
   tasks?: Todo[];
 }
 interface UserState {
@@ -68,8 +72,10 @@ export const useUserStore = create<UserState>((set, get) => ({
       return;
     }
     const copiedAllTasks = [...tasks!];
-    const filteredTasks = copiedAllTasks.filter((c) =>
-      c.title.toLowerCase().includes(value.toLowerCase())
+    const filteredTasks = copiedAllTasks.filter(
+      (c) =>
+        c.title.toLowerCase().includes(value.toLowerCase()) ||
+        c.assignee.name.toLowerCase().includes(value.toLowerCase())
     );
 
     set({ searchString: value, tempBoard: groupTasksByStatus(filteredTasks) });

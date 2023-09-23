@@ -1,8 +1,17 @@
-import { ID, databases } from "@/appwrite";
-import { getImageUrl, uploadImage } from "@/lib/helpers";
-import { Board, Image, Todo, TypeColumns } from "@/typings";
+import { InvitedUserType, Todo } from "@/typings";
 import { create } from "zustand";
 
+interface InviteModalTypes {
+  openType?: "edit" | "add" | "view";
+  isOpen: boolean;
+  loading: boolean;
+  fieldValues: InvitedUserType;
+  setFieldValues: (
+    value: Partial<InvitedUserType>,
+    openType?: "edit" | "add"
+  ) => void;
+  resetFieldValues: () => void;
+}
 interface ModalState {
   isOpen: boolean;
   toggleModal: () => void;
@@ -12,8 +21,10 @@ interface ModalState {
     openType?: "edit" | "add" | "view"
   ) => void;
   resetAddTaskFields: () => void;
-  addTask: (board: Board) => any;
   openType?: "edit" | "add" | "view";
+
+  inviteModalStates: InviteModalTypes;
+  setInviteModalState: (value: Partial<InviteModalTypes>) => void;
 }
 
 const defaultTaskFieldValues: Todo = {
@@ -23,16 +34,62 @@ const defaultTaskFieldValues: Todo = {
   startDate: null,
   endDate: null,
   status: "todo",
-  assignee: "",
+  assignee: {
+    name: "",
+    email: "",
+  },
   priority: "low",
   createdAt: null,
   images: [],
 };
 
+const defaultInviteFieldValues: InvitedUserType = {
+  id: "",
+  name: "",
+  email: "",
+  role: "viewer",
+  status: "pending",
+};
+
 export const useModalStore = create<ModalState>((set, get) => ({
   isOpen: false,
+  isInviteOpen: false,
   openType: "view",
   toggleModal: () => set({ isOpen: !get().isOpen }),
+
+  inviteModalStates: {
+    isOpen: false,
+    loading: false,
+    fieldValues: defaultInviteFieldValues,
+    openType: "view",
+    setFieldValues: (value, openType) => {
+      set({
+        inviteModalStates: {
+          ...get().inviteModalStates,
+          fieldValues: {
+            ...get().inviteModalStates?.fieldValues,
+            ...value,
+          },
+        },
+        openType,
+      });
+    },
+    resetFieldValues: () =>
+      set({
+        inviteModalStates: {
+          ...get().inviteModalStates,
+          fieldValues: defaultInviteFieldValues,
+        },
+      }),
+  },
+  setInviteModalState: (value) => {
+    set({
+      inviteModalStates: {
+        ...get().inviteModalStates,
+        ...value,
+      },
+    });
+  },
   taskFields: { ...defaultTaskFieldValues },
   setTaskFields: (value, openType = "view") => {
     set({
@@ -49,46 +106,4 @@ export const useModalStore = create<ModalState>((set, get) => ({
         ...defaultTaskFieldValues,
       },
     }),
-  addTask: async (board) => {
-    const { image, taskType, title } = get().addTaskFields;
-    let file: Image;
-
-    if (image) {
-      const fileUpload = await uploadImage(image);
-
-      if (fileUpload) {
-        file = {
-          bucketId: fileUpload.bucketId,
-          fileId: fileUpload.$id,
-        };
-        let url = await getImageUrl(file);
-        file!.imageUrl = url.toString();
-      }
-    }
-
-    const { $id } = await databases.createDocument(
-      process.env.NEXT_PUBLIC_DATABASE_ID!,
-      process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!,
-      ID.unique(),
-      {
-        title,
-        status: taskType,
-        ...(file! && { image: JSON.stringify(file) }),
-      }
-    );
-
-    const newBoard = { ...board };
-
-    const newTodo: Todo = {
-      $id,
-      $createdAt: new Date().toISOString(),
-      title,
-      status: taskType,
-      ...(file! && { image: file }),
-    };
-
-    newBoard[taskType].push(newTodo);
-
-    return newBoard;
-  },
 }));

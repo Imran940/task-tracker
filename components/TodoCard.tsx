@@ -1,14 +1,12 @@
 "use client";
-import { getImageUrl, roleAccess, updateUserInFirestore } from "@/lib/helpers";
-import { useBoardStore } from "@/store/BoardStore";
+import { roleAccess, updateUserInFirestore } from "@/lib/helpers";
+
 import { useModalStore } from "@/store/ModalStore";
 import { useUserStore } from "@/store/UserStore";
 import { Todo, TypeColumns } from "@/typings";
 import { XCircleIcon } from "@heroicons/react/24/solid";
 import { Popconfirm } from "antd";
-import { getURL } from "next/dist/shared/lib/utils";
-import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   DraggableProvidedDragHandleProps,
   DraggableProvidedDraggableProps,
@@ -35,7 +33,6 @@ function TodoCard({
   draggableProps,
 }: Props) {
   const { user, setUserData } = useUserStore((state) => state);
-  const { deleteTask } = useBoardStore((state) => state);
   const [loading, setLoading] = useState<boolean>(false);
   const { setTaskFields, toggleModal } = useModalStore((state) => state);
 
@@ -67,7 +64,7 @@ function TodoCard({
           round
           size="30"
           name={todo.assignee.name ? todo.assignee.name : todo.assignee.email}
-          title={todo.assignee.email ? todo.assignee.email : ""}
+          title={todo.assignee.name ? todo.assignee.name : todo.assignee.email}
           className="cursor-pointer"
         />
         <div className="flex justify-between items-start gap-1 w-[95%]">
@@ -112,18 +109,6 @@ function TodoCard({
           </div>
         </div>
       </div>
-
-      {/* {todo.images?.imageUrl && (
-        <div className="h-full w-full rounded-b-md">
-          <Image
-            src={todo.image.imageUrl}
-            alt="Task image"
-            width={400}
-            height={200}
-            className="w-full object-contain rounded-b-md"
-          />
-        </div>
-      )} */}
     </div>
   );
 }

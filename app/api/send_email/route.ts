@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const { payload } = await request.json();
     console.log(payload);
-    const { name, role, fromEmail, toEmail, ownerName } = payload;
+    const { name, role, fromEmail, toEmail, ownerName, message } = payload;
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -22,13 +22,17 @@ export async function POST(request: Request) {
       from: process.env.NEXT_PUBLIC_GMAIL_USER,
       to: toEmail,
       subject: "Invitation of task management application",
-      html: `Hey <b>${name}</b>, ${ownerName} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${role}</b><br/>
+      html: message
+        ? message
+        : `Hey <b>${name}</b>, ${ownerName} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${role}</b><br/>
     <a href=${process.env.NEXT_PUBLIC_HOST}/login/?ownerEmail=${fromEmail}&userEmail=${toEmail}>Click here to go to project</a>`,
     };
 
     await transporter.sendMail(mailOptions);
     return NextResponse.json({
-      data: `Invitation email sent successfully to ${toEmail}`,
+      data: !message
+        ? `Invitation email sent successfully to ${toEmail}`
+        : "Member Updated successfully",
     });
   } catch (err) {
     console.log(err);

@@ -1,35 +1,28 @@
 "use client";
 
 import { auth } from "@/firebase";
-import { useBoardStore } from "@/store/BoardStore";
 import { useUserStore } from "@/store/UserStore";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { UserCircleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Avatar from "react-avatar";
 import { toast } from "react-toastify";
-import { ModalState } from "@/typings";
 import InviteModal from "@/modals/InviteModal";
 import { roleAccess } from "@/lib/helpers";
 import { Popconfirm } from "antd";
+import { useModalStore } from "@/store/ModalStore";
 
 function Header() {
-  // const { setSearchString, searchString, board } = useBoardStore(
-  //   (state) => state
-  // );
-  const [loading, setLoading] = useState<boolean>(false);
-  const [suggestion, setSuggestion] = useState<string>("");
+  // const [suggestion, setSuggestion] = useState<string>("");
   const {
-    user: { name, email, profilePic, role, invitedUsers = [], tasks },
+    user: { name, email, profilePic, role, tasks },
     setSearchString,
     searchString,
-    tempBoard,
   } = useUserStore((state) => state);
-  const [inviteModal, setInviteModal] = useState<ModalState>({
-    open: false,
-    loading: false,
-  });
+  const {
+    inviteModalStates: { isOpen },
+    setInviteModalState,
+  } = useModalStore((state) => state);
 
   // useEffect(() => {
   //   //if (board.columns.size == 0) return;
@@ -39,18 +32,16 @@ function Header() {
   //   //   setSuggestion(suggestion);
   //   //   setLoading(false);
   //   // })();
+
   // }, [board]);
 
   return (
     <header className="mb-10">
-      <InviteModal
-        inviteModalState={inviteModal}
-        setInviteModal={setInviteModal}
-      />
+      {isOpen ? <InviteModal /> : null}
       <div className="flex flex-col md:flex-row items-center p-5 bg-gray-500/10 rounded-b-2xl ">
         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-pink-400 to-[#0055d1] rounded-md filter blur-3xl opacity-50 -z-50" />
         <Image
-          src="https://links.papareact.com/c2cdd5"
+          src="https://asbtasktracker.com/wp-content/uploads/2022/01/tasktracker-logo-hor-green.png"
           alt="Trello logo"
           width={300}
           height={100}
@@ -61,21 +52,11 @@ function Header() {
           {roleAccess[role!]?.includes("invite") ? (
             <span
               onClick={() =>
-                setInviteModal((prevValue) => ({ ...prevValue, open: true }))
+                setInviteModalState({ isOpen: true, openType: "view" })
               }
               className="text-lg cursor-pointer"
             >
               Show Members
-            </span>
-          ) : null}
-          {roleAccess[role!]?.includes("invite") ? (
-            <span
-              onClick={() =>
-                setInviteModal((prevValue) => ({ ...prevValue, open: true }))
-              }
-              className="text-lg text-blue-600 cursor-pointer"
-            >
-              Add Member
             </span>
           ) : null}
 
@@ -92,11 +73,11 @@ function Header() {
             <span className="text-lg text-red-600 cursor-pointer">Logout</span>
           </Popconfirm>
 
-          <form className="flex items-center space-x-5 bg-white rounded-md p-2 shadow-md flex-1 md:flex-initial">
-            <MagnifyingGlassIcon className="h-6 w-6 text-gray-400" />
+          <form className="flex items-center w-full md:w-[30%] space-x-2 bg-white rounded-md p-2 shadow-md flex-1 md:flex-initial">
+            <MagnifyingGlassIcon className="h-[8%] w-[8%] text-gray-400" />
             <input
               type="text"
-              placeholder="Search.."
+              placeholder="Search by task's title or assignee's name"
               className="flex-1 outline-none p-2"
               value={searchString}
               onChange={(e) => setSearchString(e.target.value, tasks!)}
@@ -116,7 +97,8 @@ function Header() {
         </div>
       </div>
 
-      {/* <div className="flex items-center justify-center px-5 md:py-5 py-2">
+      {/* Reason- Because it was throwing limit error from openai api. trying to debug
+       <div className="flex items-center justify-center px-5 md:py-5 py-2">
         <p className="flex items-center text-sm font-light pr-5 p-5  rounded-xl w-fit bg-white italic max-w-3xl text-[#0055d1] shadow-xl">
           <UserCircleIcon
             className={`inline-block h-10 w-10 mr-1 text-[#0055d1] ${

@@ -1,6 +1,6 @@
 "use client";
-import { useBoardStore } from "@/store/BoardStore";
-import React, { useEffect } from "react";
+
+import React from "react";
 import { DragDropContext, DropResult, Droppable } from "react-beautiful-dnd";
 import Column from "./Column";
 import Header from "./Header";
@@ -8,24 +8,13 @@ import { useUserStore } from "@/store/UserStore";
 import { updateUserInFirestore } from "@/lib/helpers";
 
 function Board() {
-  // const { getBoard, board, setBoardState, updateTaskInDB, tempBoard } =
-  //   useBoardStore((state) => state);
-
-  const { updateTaskInDB } = useBoardStore((state) => state);
   const {
     user: { tasks, email },
-    user,
     board,
     setBoard,
-    setUserData,
     tempBoard,
   } = useUserStore((state) => state);
 
-  // useEffect(() => {
-  //   if (tasks?.length) getBoard(tasks);
-  // }, [tasks]);
-
-  console.log({ boardInUi: board });
   const handleOnDragEnd = async (result: DropResult) => {
     const { destination, type, source } = result;
     console.log(result);
@@ -77,10 +66,6 @@ function Board() {
           updateUserInFirestore(email!, { tasks: newTasks });
         }
 
-        //updating to the global store
-        // let newUser = { ...user };
-        // newUser.tasks = newTasks;
-        // setUserData(newUser);
         setBoard({
           ...board,
           [sourceColumn]: sourceColTodos,

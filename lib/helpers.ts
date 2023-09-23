@@ -1,69 +1,13 @@
-import { ID, databases, storage } from "@/appwrite";
 import { db } from "@/firebase";
 import {
   Access,
   Board,
-  Image,
   ProjectRole,
   Todo,
-  TypeColumns,
   sendMailPayload,
   userType,
 } from "@/typings";
 import { collection, doc, getDoc, setDoc } from "firebase/firestore";
-
-export const getTodosGroupedByColumn = async () => {
-  const data = await databases.listDocuments(
-    process.env.NEXT_PUBLIC_DATABASE_ID!,
-    process.env.NEXT_PUBLIC_TODOS_COLLECTION_ID!
-  );
-  const todos = data.documents;
-
-  // grouping values by status
-  // const columns = todos.reduce((acc, todo) => {
-  //   if (!acc.get(todo.status)) {
-  //     acc.set(todo.status, {
-  //       id: todo.status,
-  //       todos: [],
-  //     });
-  //   }
-
-  //   acc.get(todo.status)!.todos.push({
-  //     ...todo,
-  //     ...(todo.image && { image: JSON.parse(todo.image) }),
-  //   });
-
-  //   return acc;
-  // }, new Map<TypeColumns, Column>());
-
-  // adding the column of the status with empty array if any of the column status is not found
-  // const columnTypes: TypeColumns[] = ["todo", "inprogress", "done"];
-  // for (const columnType of columnTypes) {
-  //   if (!columns.get(columnType)) {
-  //     columns.set(columnType, {
-  //       id: columnType,
-  //       todos: [],
-  //     });
-  //   }
-  // }
-
-  // const sortedColumns = new Map<TypeColumns, Column>(
-  //   //@ts-expect-error ignore this sort
-  //   Array.from(columns.entries()).sort(
-  //     (a, b) => columnTypes.indexOf(a[0]) - columnTypes.indexOf(b[0])
-  //   )
-  // );
-
-  // const board: Board = {
-  //   columns: sortedColumns,
-  // };
-
-  // return { board, allTasks: mergeAllTasks(board) };
-  const result = groupTasksByStatus(todos);
-  const allTasks = mergeAllTasks(result);
-
-  return { result, allTasks };
-};
 
 export const mergeAllTasks = (board: Board) => {
   const allTodos = Object.values(board);
@@ -125,22 +69,6 @@ export const sendEmail = async (payload: sendMailPayload) => {
   return data.data;
 };
 
-export const uploadImage = async (file: File) => {
-  if (!file) return;
-
-  const fileUpload = await storage.createFile(
-    process.env.NEXT_PUBLIC_BUCKET_ID,
-    ID.unique(),
-    file
-  );
-  return fileUpload;
-};
-
-export const getImageUrl = async (image: Image) => {
-  const url = storage.getFileView(image.bucketId, image.fileId);
-  return url;
-};
-
 export function isValidEmail(email = "") {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -152,10 +80,6 @@ export const getUserFromFirestore = async (email: string) => {
   const docRef = doc(db, "users", email);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    // let value = docSnap.data();
-    // if (value.signupMethods?.includes(method)) {
-    //   data = value;
-    // }
     data = docSnap.data();
   }
   return data;
@@ -189,20 +113,6 @@ export const updateUserInFirestore = async (
   const usersRef = doc(db, "users", email);
   await setDoc(usersRef, payload, { merge: true });
 };
-
-// export const addTaskToFirestore = async ({
-//   task,
-//   email,
-// }: {
-//   task: Todo;
-//   email: string;
-// }) => {
-//   try {
-
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
 
 const AllAccesses: Access[] = ["add", "edit", "delete", "invite"];
 const EditorUserAccesses: Access[] = ["edit", "add"];

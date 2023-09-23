@@ -1,9 +1,8 @@
 import { Todo, TypeColumns } from "@/typings";
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
-import React, { useState } from "react";
+import React from "react";
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import TodoCard from "./TodoCard";
-import { useBoardStore } from "@/store/BoardStore";
 import { useModalStore } from "@/store/ModalStore";
 import { useUserStore } from "@/store/UserStore";
 import TaskModal from "@/modals/TaskModal";
