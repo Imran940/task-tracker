@@ -76,11 +76,14 @@ export function isValidEmail(email = "") {
 export const getUserFromFirestore = async (email: string) => {
   if (!email) return null;
   let data;
-  const docRef = doc(db, "users", email);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    data = docSnap.data();
+  if (doc && typeof doc == "function") {
+    const docRef = doc(db, "users", email);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      data = docSnap.data();
+    }
   }
+ 
   return data;
 };
 

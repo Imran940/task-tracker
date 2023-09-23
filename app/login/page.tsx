@@ -27,7 +27,9 @@ import { parse } from "url";
 import { InvitedUserType } from "@/typings";
 
 const defaultLoginValue = { email: "", password: "" };
-function Page() {
+let storedName: string | null;
+
+export default function Page() {
   const [loginData, setLoginData] = useState<{
     name?: string | null;
     email: string;
@@ -46,12 +48,15 @@ function Page() {
   const [showInvitedView, setShowInvitedView] = useState(false);
   const { email, password, name } = loginData;
   const { loginLoading, registerLoading, resetLoading } = loadingState;
-  const storedName =
-    typeof window !== undefined && window.localStorage
-      ? localStorage.getItem("name")
-      : "";
-  const params = parse(location.search, true);
-  const { ownerEmail, userEmail } = params.query || {};
+
+  const params =
+    parse &&
+    typeof parse == "function" &&
+    typeof location != "undefined" &&
+    location.search
+      ? parse(location.search, true)
+      : null;
+  const { ownerEmail, userEmail } = params?.query || {};
 
   useEffect(() => {
     if (sessionStorage.getItem("isLogin")) {
@@ -63,9 +68,10 @@ function Page() {
     if (typeof window !== "undefined" && window.localStorage) {
       storedEmail = localStorage.getItem("email")!;
       actionMode = localStorage.getItem("actionMode")!;
+      storedName = localStorage.getItem("name");
     }
     if (storedEmail && actionMode == "register") {
-      if (params.query.apiKey) {
+      if (params?.query.apiKey) {
         (async () => {
           try {
             const result = await signInWithEmailLink(auth, storedEmail);
@@ -484,5 +490,3 @@ function Page() {
     </div>
   );
 }
-
-export default Page;
