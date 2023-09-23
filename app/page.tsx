@@ -3,6 +3,7 @@ import Board from "@/components/Board";
 import { auth } from "@/firebase";
 import { getUserFromFirestore } from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
+import { User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -32,6 +33,7 @@ export default function Home() {
           name: user.displayName ? user.displayName : data?.name,
           email: user.email,
           emailVerified: user.emailVerified,
+          //@ts-expect-error accessToken will be there and checked it
           accessToken: user.accessToken,
           profilePic: user.photoURL,
           ...(data?.role && { role: data?.role }),

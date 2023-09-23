@@ -38,6 +38,8 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@types/react-beautiful-dnd": "^13.1.4"
+    "@types/nodemailer": "^6.4.10",
+    "@types/react-beautiful-dnd": "^13.1.4",
+    "@types/uuid": "^9.0.4"
   }
 }

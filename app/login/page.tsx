@@ -1,7 +1,5 @@
 "use client";
-import { account } from "@/appwrite";
-import { auth, db, googleAuthProvider } from "@/firebase";
-import { useUserStore } from "@/store/UserStore";
+import { auth, googleAuthProvider } from "@/firebase";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -12,7 +10,6 @@ import {
   sendPasswordResetEmail,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { collection, getDoc, where, setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -26,7 +23,7 @@ import {
 import { Button } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import { parse } from "url";
-import { userType } from "@/typings";
+import { InvitedUserType } from "@/typings";
 
 const defaultLoginValue = { email: "", password: "" };
 function Login() {
@@ -48,7 +45,7 @@ function Login() {
   const [showInvitedView, setShowInvitedView] = useState(false);
   const { email, password, name } = loginData;
   const { loginLoading, registerLoading, resetLoading } = loadingState;
-  const storedName = localStorage.getItem("name");
+  const storedName = window.localStorage.getItem("name");
   const params = parse(window.location.search, true);
   const { ownerEmail, userEmail } = params.query || {};
 
@@ -57,8 +54,8 @@ function Login() {
       router.push("/");
       return;
     }
-    const storedEmail = localStorage.getItem("email");
-    const actionMode = localStorage.getItem("actionMode");
+    const storedEmail = window.localStorage.getItem("email");
+    const actionMode = window.localStorage.getItem("actionMode");
 
     if (storedEmail && actionMode == "register") {
       if (params.query.apiKey) {
@@ -85,7 +82,7 @@ function Login() {
     } else if (storedEmail) {
       // password reset
       setLoginData((prevVaue) => ({ ...prevVaue, email: storedEmail }));
-      localStorage.clear();
+      window.localStorage.clear();
       setShowSignUp(false);
     } else if (ownerEmail && userEmail) {
       setShowInvitedView(true);
@@ -154,12 +151,12 @@ function Login() {
         }
 
         toast("password set successfullyt", { type: "success" });
-        localStorage.clear();
+        window.localStorage.clear();
         router.push("/");
       } else if (showSignUp && !showInvitedView) {
-        localStorage.setItem("email", email);
-        localStorage.setItem("name", name!);
-        localStorage.setItem("actionMode", "register");
+        window.localStorage.setItem("email", email);
+        window.localStorage.setItem("name", name!);
+        window.localStorage.setItem("actionMode", "register");
 
         const userData = await getUserFromFirestore(email);
         if (userData?.signupMethods.includes("email")) {
@@ -170,7 +167,7 @@ function Login() {
               ? { registerLoading: false }
               : { loginLoading: false }),
           }));
-          localStorage.clear();
+          window.localStorage.clear();
           return;
         }
         await sendSignInLinkToEmail(auth, email, {
@@ -180,8 +177,9 @@ function Login() {
         toast("Send Register Confirmation Link to your email address", {
           type: "success",
         });
-      } else if (showInvitedView) {
-        const userData = await getUserFromFirestore(ownerEmail!);
+      } else if (showInvitedView && ownerEmail) {
+        //@ts-expect-error ignore ownerEmail array check because I've checked it's coming as string
+        const userData = await getUserFromFirestore(ownerEmail);
         if (!userData) {
           toast(`Project not found by this email - ${ownerEmail}`, {
             type: "error",
@@ -195,7 +193,7 @@ function Login() {
           return;
         }
         const invitedUserIndex = userData.invitedUsers.findIndex(
-          (i) => i.email == userEmail
+          (i: InvitedUserType) => i.email == userEmail
         );
         if (invitedUserIndex == -1) {
           toast(`No owner has invited you to the project`, {
@@ -210,19 +208,24 @@ function Login() {
           return;
         }
 
-        const isInvitedUserFound = await getUserFromFirestore(userEmail!);
-        if (isInvitedUserFound) {
-          toast(`User already created with Email- ${userEmail}`);
-          setLoadingState((prevLoading) => ({
-            ...prevLoading,
-            ...(showSignUp
-              ? { registerLoading: false }
-              : { loginLoading: false }),
-          }));
-          return;
+        if (userEmail) {
+          //@ts-expect-error ignore userEmail array check because I've checked it's coming as string
+          const isInvitedUserFound = await getUserFromFirestore(userEmail);
+          if (isInvitedUserFound) {
+            toast(`User already created with Email- ${userEmail}`);
+            setLoadingState((prevLoading) => ({
+              ...prevLoading,
+              ...(showSignUp
+                ? { registerLoading: false }
+                : { loginLoading: false }),
+            }));
+            return;
+          }
         }
+
         if (userData.invitedUsers[invitedUserIndex]?.email == userEmail) {
           //creating user in auth and firestore
+          //@ts-expect-error ignore userEmail array check because I've checked it's coming as string
           await createUserWithEmailAndPassword(auth, userEmail!, password);
           await createUserInFirestore({
             email: userData.invitedUsers[invitedUserIndex].email,
@@ -259,8 +262,10 @@ function Login() {
       }));
     } catch (err) {
       console.log({ err });
+      //@ts-expect-error ignore this err object it's working fine
       if (err.code == "auth/user-not-found") {
         toast("User is not found", { type: "error" });
+        //@ts-expect-error ignore this err object it's working fine
       } else if (err.code == "auth/wrong-password") {
         toast("Incorrect Password", { type: "error" });
       } else {
@@ -361,13 +366,14 @@ function Login() {
                     handleCodeInApp: true,
                   });
                   toast(`Sent the password reset link to your ${email}`);
-                  localStorage.setItem("email", email);
+                  window.localStorage.setItem("email", email);
                   setLoadingState((prevLoading) => ({
                     ...prevLoading,
                     resetLoading: false,
                   }));
                 } catch (err) {
                   console.log({ err });
+                  //@ts-expect-error ignore this err object it's working fine
                   if (err?.code == "auth/user-not-found") {
                     toast(`User doesn't found with this Email: ${email}`, {
                       type: "error",

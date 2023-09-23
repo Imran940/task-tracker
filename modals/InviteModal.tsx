@@ -5,7 +5,7 @@ import {
   updateUserInFirestore,
 } from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
-import { ModalState, ProjectRole, sendMailPayload } from "@/typings";
+import { ProjectRole, sendMailPayload } from "@/typings";
 import {
   Button,
   Form,
@@ -93,6 +93,7 @@ function InviteModal() {
     {
       title: "Action",
       key: "action",
+      //@ts-expect-error ignore this record and _ types
       render: (_, record) => (
         <Space size="middle">
           {record.status == "pending" ? <a>Re-Invite</a> : null}

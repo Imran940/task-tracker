@@ -1,12 +1,4 @@
-import {
-  Board,
-  InvitedUserType,
-  ProjectRole,
-  Todo,
-  defaultUserType,
-  userType,
-} from "@/typings";
-import { UUID } from "crypto";
+import { Board, InvitedUserType, ProjectRole, Todo } from "@/typings";
 import { create } from "zustand";
 import { groupTasksByStatus, mergeAllTasks } from "@/lib/helpers";
 interface UserDetailsState {
