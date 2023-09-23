@@ -42,7 +42,6 @@ export const fetchSuggestion = async (allTasks: Todo[] | undefined) => {
     allTasks?.forEach((task) => {
       result[task.status] = result[task.status] ? ++result[task.status] : 1;
     });
-    console.log(result);
     const res = await fetch("/api/generate_summary", {
       method: "POST",
       headers: {

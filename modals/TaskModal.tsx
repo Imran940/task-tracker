@@ -84,7 +84,6 @@ function TaskModal() {
       };
     }
   >(defaultTaskValue);
-  console.log({ defaultTaskValue, taskInputs, taskFields });
   const {
     id,
     images,
@@ -199,7 +198,6 @@ function TaskModal() {
   const handleImageChange = async (e) => {
     try {
       const files = Object.values(e.target.files);
-      console.log(files);
       if (!files?.length) return;
       setTaskInputs((prevValue) => ({
         ...prevValue,
@@ -219,9 +217,7 @@ function TaskModal() {
           imageRef: storageRef,
           imageUrl,
         });
-        console.log({ images });
         if (index == files.length - 1) {
-          console.log({ images });
           setTaskInputs((prevValue) => ({
             ...prevValue,
             images: [...prevValue.images!, ...images],

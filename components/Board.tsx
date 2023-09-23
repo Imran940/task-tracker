@@ -17,7 +17,6 @@ function Board() {
 
   const handleOnDragEnd = async (result: DropResult) => {
     const { destination, type, source } = result;
-    console.log(result);
     if (
       !destination ||
       (source.droppableId == destination.droppableId &&

@@ -50,7 +50,6 @@ function InviteModal() {
     setInviteModalState,
   } = useModalStore((state) => state);
 
-  //console.log({ invitedUserEmail, invitedUserName, invitedUserRole });
   const columns = [
     {
       title: "Name",
@@ -207,7 +206,6 @@ function InviteModal() {
             </h2>
             <Form
               onFinish={async (values) => {
-                console.log({ values });
                 if (
                   (invitedUserEmail == values.email &&
                     invitedUserName == values.name &&

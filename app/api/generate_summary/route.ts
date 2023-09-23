@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const { todos } = await request.json();
-  console.log(todos);
 
   //communicate with openAi GPT
   const response = await openai.createChatCompletion({
@@ -26,7 +25,5 @@ export async function POST(request: Request) {
     ],
   });
   const { data } = response;
-  console.log(data);
-  console.log(data.choices[0].message);
   return NextResponse.json(data.choices[0].message);
 }

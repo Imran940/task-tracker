@@ -49,7 +49,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   setBoard: (board) => {
     const newBoard = { ...board };
     delete newBoard.columns;
-    console.log({ board, newBoard });
     set({
       board,
       user: {
