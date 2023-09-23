@@ -7,9 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { setUserData, setLogOut, isUserLogin } = useUserStore(
-    (state) => state
-  );
+  const { setUserData, setLogOut } = useUserStore((state) => state);
   const router = useRouter();
 
   useEffect(() => {

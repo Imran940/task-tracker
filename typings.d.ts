@@ -36,12 +36,9 @@ export interface Image {
 export type ProjectRole = "viewer" | "editor" | "owner";
 
 export interface sendMailPayload {
-  name: string;
-  role: ProjectRole;
-  fromEmail: string;
-  toEmail: string;
-  ownerName: string;
+  email: string;
   message?: string;
+  subject: string;
 }
 
 export interface defaultUserType {

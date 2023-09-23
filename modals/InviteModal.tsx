@@ -1,4 +1,9 @@
-import { roleAccess, sendEmail, updateUserInFirestore } from "@/lib/helpers";
+import {
+  getUserFromFirestore,
+  roleAccess,
+  sendEmail,
+  updateUserInFirestore,
+} from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
 import { ModalState, ProjectRole, sendMailPayload } from "@/typings";
 import {
@@ -45,6 +50,7 @@ function InviteModal() {
     setInviteModalState,
   } = useModalStore((state) => state);
 
+  //console.log({ invitedUserEmail, invitedUserName, invitedUserRole });
   const columns = [
     {
       title: "Name",
@@ -141,6 +147,7 @@ function InviteModal() {
           isOpen: openType == "view" ? false : true,
           openType: "view",
         });
+        form.resetFields();
         resetFieldValues();
       }}
       okText={<span>Send</span>}
@@ -164,9 +171,10 @@ function InviteModal() {
                 <Button
                   title="Click to add member"
                   icon={<UserAddOutlined />}
-                  onClick={() =>
-                    setInviteModalState({ isOpen: true, openType: "add" })
-                  }
+                  onClick={() => {
+                    setInviteModalState({ isOpen: true, openType: "add" });
+                    form.setFieldValue("role", "viewer");
+                  }}
                 >
                   ADD
                 </Button>
@@ -178,6 +186,11 @@ function InviteModal() {
                 return {
                   onClick: () => {
                     setFieldValues(record);
+                    form.setFieldsValue({
+                      name: record.name,
+                      email: record.email,
+                      role: record.role,
+                    });
                     setInviteModalState({ isOpen: true, openType: "edit" });
                   },
                 };
@@ -193,6 +206,7 @@ function InviteModal() {
             </h2>
             <Form
               onFinish={async (values) => {
+                console.log({ values });
                 if (
                   (invitedUserEmail == values.email &&
                     invitedUserName == values.name &&
@@ -207,9 +221,7 @@ function InviteModal() {
                   setInviteModalState({ loading: true });
                   let newInvitedUsers = [...invitedUsers];
                   const foundIndex = newInvitedUsers?.length
-                    ? newInvitedUsers.findIndex(
-                        (n) => n.email == values.toEmail
-                      )
+                    ? newInvitedUsers.findIndex((n) => n.email == values.email)
                     : -1;
                   if (openType == "add" && foundIndex >= 0) {
                     toast("Member already added", { type: "info" });
@@ -217,39 +229,59 @@ function InviteModal() {
                   }
 
                   let payload: sendMailPayload = {
-                    ...values,
-                    fromEmail: email,
-                    ownerName: name,
-                    ...(openType == "edit" && {
-                      message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application has updated your information. Kindly check that. Thank you :)`,
-                    }),
+                    email: values.email,
+                    ...(openType == "edit"
+                      ? {
+                          message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application has updated your information. Kindly check that. Thank you :)`,
+                        }
+                      : openType == "add" && {
+                          message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${role}</b><br/>
+                <a href=${process.env.NEXT_PUBLIC_HOST}/login/?ownerEmail=${email}&userEmail=${values.email}>Click here to go to project</a>`,
+                        }),
+                    subject:
+                      openType == "add"
+                        ? "Invitation of task management application"
+                        : "Update on invitation of task management application",
                   };
 
                   //sending email to the user
-                  const response = await sendEmail(payload);
+                  await sendEmail(payload);
 
                   // updating user owner invitedUser field
                   if (foundIndex == -1)
                     newInvitedUsers.push({
                       id: uuidv4(),
-                      email: values.toEmail,
-                      name: values.name,
-                      role: values.role,
+                      ...values,
                       status: "pending",
                     });
                   else {
                     newInvitedUsers[foundIndex] = {
                       ...newInvitedUsers[foundIndex],
                       ...values,
-                      email: values.toEmail,
                     };
                   }
+
+                  //updating stuff in the owner's data
                   await updateUserInFirestore(email!, {
                     invitedUsers: newInvitedUsers,
                   });
 
+                  //updating stuff in the user's data
+                  if (openType == "edit") {
+                    let userData = await getUserFromFirestore(invitedUserEmail);
+                    userData = {
+                      ...userData,
+                      ...values,
+                    };
+                    await updateUserInFirestore(invitedUserEmail, userData!);
+                  }
+
                   newUser.invitedUsers = newInvitedUsers;
-                  toast(response);
+                  toast(
+                    openType == "add"
+                      ? `Invitation email sent successfully to ${values.email}`
+                      : "Member invitation updated successfully"
+                  );
                   form.resetFields();
                   setUserData(newUser);
                   setInviteModalState({ loading: false, openType: "view" });
@@ -275,13 +307,13 @@ function InviteModal() {
                     message: "Name equal to 5 or more characters",
                   },
                 ]}
-                initialValue={invitedUserName}
+                //initialValue={invitedUserName}
               >
                 <Input placeholder="Enter the user's name" />
               </Item>
               <Item
                 label="Email"
-                name="toEmail"
+                name="email"
                 rules={[
                   {
                     type: "email",
@@ -292,11 +324,15 @@ function InviteModal() {
                     message: "Please input your E-mail!",
                   },
                 ]}
-                initialValue={invitedUserEmail}
+                //initialValue={invitedUserEmail}
               >
                 <Input placeholder="Enter the user email" />
               </Item>
-              <Item name="role" initialValue={invitedUserRole} label="Role">
+              <Item
+                name="role"
+                //initialValue={invitedUserRole}
+                label="Role"
+              >
                 <Select className="w-full">
                   {roles.map((r, i) => (
                     <Option value={r} key={i}>

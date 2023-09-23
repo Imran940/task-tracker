@@ -29,7 +29,7 @@ import { parse } from "url";
 import { userType } from "@/typings";
 
 const defaultLoginValue = { email: "", password: "" };
-function login() {
+function Login() {
   const [loginData, setLoginData] = useState<{
     name?: string | null;
     email: string;
@@ -459,4 +459,4 @@ function login() {
   );
 }
 
-export default login;
+export default Login;

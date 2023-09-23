@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 import { useModalStore } from "@/store/ModalStore";
-import { Image, Priority, Todo, TypeColumns } from "@/typings";
+import { Image, Priority, Todo, TypeColumns, sendMailPayload } from "@/typings";
 import {
   Input,
   Modal,
@@ -28,7 +28,7 @@ import { useUserStore } from "@/store/UserStore";
 import moment from "moment";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { updateUserInFirestore } from "@/lib/helpers";
+import { sendEmail, updateUserInFirestore } from "@/lib/helpers";
 import dayjs from "dayjs";
 
 const { PreviewGroup } = AntdImage;
@@ -65,7 +65,10 @@ function TaskModal() {
         imageRef: JSON.parse(tm.imageRef),
       })),
     }),
-    assignee: { name: name!, email: email! },
+    assignee: {
+      name: taskFields?.assignee.name ? taskFields?.assignee.name : name!,
+      email: taskFields?.assignee.email ? taskFields?.assignee.email : email!,
+    },
     loading: {
       imageRemove: false,
       imageUpload: false,
@@ -145,9 +148,27 @@ function TaskModal() {
         newTasks.push(payload);
       }
 
-      console.log({ newTasks, payload, board });
       //add task
       await updateUserInFirestore(email!, { tasks: newTasks });
+
+      //sending mail to the user for the task update or add
+      let payloadData: sendMailPayload = {
+        email: payload.assignee.email,
+        subject:
+          openType == "add"
+            ? "Task Add Notification"
+            : "Task Update Notification",
+        message: `
+          Hey <b>${
+            payload.assignee.name
+          }</b>, ${name} the owner of the task management application has been ${
+          openType == "add" ? "assigned" : "updated"
+        }  one work for you. <br/>
+          <b>Task title</b>: ${payload.title}<br/>
+          Kindly open the application and check it. Do let me know if you've any queries on this task. Thank you :)
+        `,
+      };
+      await sendEmail(payloadData);
 
       newUser.tasks = newTasks;
       setUserData(newUser);

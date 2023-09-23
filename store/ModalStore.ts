@@ -60,7 +60,7 @@ export const useModalStore = create<ModalState>((set, get) => ({
   inviteModalStates: {
     isOpen: false,
     loading: false,
-    fieldValues: defaultInviteFieldValues,
+    fieldValues: { ...defaultInviteFieldValues },
     openType: "view",
     setFieldValues: (value, openType) => {
       set({
@@ -78,10 +78,11 @@ export const useModalStore = create<ModalState>((set, get) => ({
       set({
         inviteModalStates: {
           ...get().inviteModalStates,
-          fieldValues: defaultInviteFieldValues,
+          fieldValues: { ...defaultInviteFieldValues },
         },
       }),
   },
+
   setInviteModalState: (value) => {
     set({
       inviteModalStates: {
