@@ -22,7 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { useModalStore } from "@/store/ModalStore";
-import { UserAddOutlined } from "@ant-design/icons";
+import { LoadingOutlined, UserAddOutlined } from "@ant-design/icons";
 
 const { Item } = Form;
 const { Option } = Select;
@@ -95,7 +95,30 @@ function InviteModal() {
       //@ts-expect-error ignore this record and _ types
       render: (_, record) => (
         <Space size="middle">
-          {record.status == "pending" ? <a>Re-Invite</a> : null}
+          {record.status == "pending" ? (
+            <a
+              onClick={async (e) => {
+                try {
+                  e.stopPropagation();
+                  setInviteModalState({ loading: true });
+                  await sendEmail({
+                    email: record.email,
+                    subject: "Re-Invitation of task tracker",
+                    message: `Hey <b>${record.name}</b>, ${name} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${record.role}</b><br/>
+                <a href=${process.env.NEXT_PUBLIC_HOST}/login/?ownerEmail=${email}&userEmail=${record.email}>Click here to go to project</a>`,
+                  });
+                  setInviteModalState({ loading: false });
+                  toast(`Re-Invitation sent successfully to ${record.email}`);
+                } catch (err) {
+                  console.log(err);
+                  setInviteModalState({ loading: false });
+                  toast("Something happened wrong", { type: "error" });
+                }
+              }}
+            >
+              {loading ? <LoadingOutlined /> : "Re-Invite"}
+            </a>
+          ) : null}
           {/* going to add this block and un-block feature {record.status == "active" ? (
             <a>Block</a>
           ) : (
@@ -234,7 +257,7 @@ function InviteModal() {
                           message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application has updated your information. Kindly check that. Thank you :)`,
                         }
                       : openType == "add" && {
-                          message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${role}</b><br/>
+                          message: `Hey <b>${values.name}</b>, ${name} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${values.role}</b><br/>
                 <a href=${process.env.NEXT_PUBLIC_HOST}/login/?ownerEmail=${email}&userEmail=${values.email}>Click here to go to project</a>`,
                         }),
                     subject:

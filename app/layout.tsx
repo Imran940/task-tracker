@@ -1,6 +1,6 @@
+import { ToastContainer } from "react-toastify";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
 
 export const metadata = {
   title: "Trello Clone",
@@ -15,8 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#f5f6f8]">
-        {children}
-        <ToastContainer />
+        <>
+          {children}
+          <ToastContainer />
+        </>
       </body>
     </html>
   );

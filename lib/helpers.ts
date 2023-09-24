@@ -83,7 +83,7 @@ export const getUserFromFirestore = async (email: string) => {
       data = docSnap.data();
     }
   }
- 
+
   return data;
 };
 

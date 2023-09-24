@@ -30,6 +30,7 @@ const defaultLoginValue = { email: "", password: "" };
 let storedName: string | null;
 
 export default function Page() {
+
   const [loginData, setLoginData] = useState<{
     name?: string | null;
     email: string;
@@ -50,8 +51,7 @@ export default function Page() {
   const { loginLoading, registerLoading, resetLoading } = loadingState;
 
   const params =
-    parse &&
-    typeof parse == "function" &&
+    typeof document !== "undefined" &&
     typeof location != "undefined" &&
     location.search
       ? parse(location.search, true)
@@ -154,7 +154,7 @@ export default function Page() {
         // saving user in the firestore
         const userData = await getUserFromFirestore(user.email!);
         if (userData) {
-          updateUserInFirestore(user.email!, {
+          await updateUserInFirestore(user.email!, {
             signupMethods: [...userData.signupMethods, "email"],
           });
         } else {
@@ -166,7 +166,7 @@ export default function Page() {
           });
         }
 
-        toast("password set successfullyt", { type: "success" });
+        toast("Account created successfully", { type: "success" });
         if (typeof window !== "undefined" && window.localStorage) {
           localStorage.clear();
         }

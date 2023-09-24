@@ -1,8 +1,12 @@
 "use client";
-import Board from "@/components/Board";
+
+const DynamicBoard = dynamic(() => import("@/components/Board"), {
+  ssr: false,
+});
 import { auth } from "@/firebase";
 import { getUserFromFirestore } from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -48,16 +52,16 @@ export default function Home() {
               }),
         };
         setUserData(userData);
-        //getBoard(userData.tasks);
       } else {
         setLogOut();
         router.push("/login");
       }
     });
   }, []);
+
   return (
     <main>
-      <Board />
+      <DynamicBoard />
     </main>
   );
 }
