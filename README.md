@@ -1,4 +1,17 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Task Tracker Application
+  ## Overview
+  This is the next project build which is used to create, update, and delete a task. you can even add a member to your project by sending an invitation email to them so that
+  they can also start engaging with you. There are roles such as `owner`, `editor`, and `viewer` added to this project, Based on the role of the user they will get the features.
+
+  ## Technologies used
+   1. Nextjs
+   2. TailwindCSS
+   3. Antd (Third Party Component Library)
+   4. Firebase (Authentication, Firestore)
+   5. Vercel (To deploy the project)
+
+ ## Detailed Demo Video
+ https://drive.google.com/file/d/1mo7_8LJn-uiOCTS-k5gEc9NpaEWp7KYn/view?usp=sharing
 
 ## Getting Started
 
@@ -18,17 +31,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## To build your project on a local
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployed on Vercel
+Here you can find a live project URL: https://task-tracker-teal.vercel.app/
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
