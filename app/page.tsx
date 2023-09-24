@@ -16,6 +16,12 @@ export default function Home() {
 
   useEffect(() => {
     auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        setLogOut();
+        router.push("/login");
+        return;
+      }
+
       const data = await getUserFromFirestore(user?.email!);
       if (!data) {
         await auth.signOut();
@@ -39,10 +45,7 @@ export default function Home() {
           //@ts-expect-error accessToken will be there and checked it
           accessToken: user.accessToken,
           profilePic: user.photoURL,
-          ...(data?.role && { role: data?.role }),
-          ...(data?.invitedUsers?.length && {
-            invitedUsers: data?.invitedUsers,
-          }),
+          ...data,
           ...(data?.tasks?.length
             ? {
                 tasks: data?.tasks,
@@ -52,9 +55,6 @@ export default function Home() {
               }),
         };
         setUserData(userData);
-      } else {
-        setLogOut();
-        router.push("/login");
       }
     });
   }, []);

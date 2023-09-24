@@ -10,6 +10,7 @@ interface UserDetailsState {
   role?: ProjectRole;
   invitedUsers?: InvitedUserType[];
   tasks?: Todo[];
+  invitedBy?: string;
 }
 interface UserState {
   user: UserDetailsState;

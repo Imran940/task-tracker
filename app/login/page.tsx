@@ -121,7 +121,7 @@ export default function Page() {
           });
         }
         if (userData && !userData.signupMethods.includes("google")) {
-          updateUserInFirestore(data.user.email!, {
+          await updateUserInFirestore(data.user.email!, {
             signupMethods: [...userData.signupMethods, "google"],
           });
         }

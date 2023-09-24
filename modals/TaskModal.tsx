@@ -44,7 +44,7 @@ function TaskModal() {
   const { isOpen, toggleModal, taskFields, resetAddTaskFields, openType } =
     useModalStore((state) => state);
   const {
-    user: { email, name, invitedUsers = [], tasks = [], role },
+    user: { email, name, invitedUsers = [], tasks = [], role, invitedBy },
     user,
     board,
     setBoard,
@@ -149,7 +149,9 @@ function TaskModal() {
       }
 
       //add task
-      await updateUserInFirestore(email!, { tasks: newTasks });
+      await updateUserInFirestore(invitedBy ? invitedBy : email!, {
+        tasks: newTasks,
+      });
 
       //sending mail to the user for the task update or add
       let payloadData: sendMailPayload = {
