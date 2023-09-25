@@ -46,15 +46,22 @@ export interface defaultUserType {
   role?: ProjectRole;
   name: string;
   signupMethods?: ("google" | "email")[];
+  status: "pending" | "active" | "block";
+  // googleTokens: {
+  //   access_token: string;
+  //   refresh_token: string;
+  //   token_type: string;
+  //   id_token: string;
+  //   expiry_date: number;
+  // };
 }
 
 export type InvitedUserType = defaultUserType & {
   id: UUID | string;
-  status: "pending" | "active" | "block";
 };
 export interface userType extends defaultUserType {
   invitedUsers?: InvitedUserType[];
-  invitedBy?: string;
+  invitedBy?: string | null;
   tasks?: Todo[];
 }
 

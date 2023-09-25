@@ -28,14 +28,28 @@ export default function Home() {
         setLogOut();
         router.push("/login");
       } else if (user) {
-        //check for invitedBy field
+        // //check for invitedBy field
         let ownerUser;
         if (data.invitedBy) {
           ownerUser = await getUserFromFirestore(data.invitedBy);
         }
 
-        // if(!ownerUser &&  data?.role=="viewer"){
+        // if (!ownerUser && data?.role != "owner") {
+        //   await auth.signOut();
+        //   setLogOut();
+        //   router.push("/login");
+        //   toast(
+        //     "You're no longer associate with any project. Kindly contact the owner of the project"
+        //   );
+        //   return;
+        // }
 
+        // if (ownerUser && data?.status == "block") {
+        //   await auth.signOut();
+        //   setLogOut();
+        //   router.push("/login");
+        //   toast("You have been blocked by the owner of the project");
+        //   return;
         // }
 
         const userData = {

@@ -17,7 +17,7 @@ import {
   Table,
   Tag,
 } from "antd";
-import React from "react";
+import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
@@ -27,11 +27,7 @@ import { LoadingOutlined, UserAddOutlined } from "@ant-design/icons";
 const { Item } = Form;
 const { Option } = Select;
 function InviteModal() {
-  const {
-    user: { name, email, role, invitedUsers = [] },
-    user,
-    setUserData,
-  } = useUserStore((state) => state);
+  const { user, setUserData } = useUserStore((state) => state);
   const [form] = Form.useForm();
   const roles: ProjectRole[] = ["viewer", "editor", "owner"];
   const {
@@ -49,6 +45,63 @@ function InviteModal() {
     },
     setInviteModalState,
   } = useModalStore((state) => state);
+
+  const { name, email, role, invitedUsers = [] } = user;
+
+  const [{ blockLoading, deleteLoading }, setLoadingState] = useState<{
+    blockLoading: boolean;
+    deleteLoading: boolean;
+  }>({
+    blockLoading: false,
+    deleteLoading: false,
+  });
+
+  // check this update part of the status in the modal, it's updating as I want but I haven't understand how it's updated
+  const handleBlockOrUnBlock = async (e, record, type: "block" | "unblock") => {
+    e.stopPropagation();
+    const newStatus = type == "unblock" ? "active" : "block";
+    try {
+      setLoadingState((prevValues) => ({
+        ...prevValues,
+        blockLoading: true,
+      }));
+      const updatedUser = { ...user };
+      const updatedInvitedUsers = updatedUser.invitedUsers?.length
+        ? [...updatedUser.invitedUsers]
+        : [];
+      const index = updatedInvitedUsers.findIndex(
+        (i) => i.email == record.email
+      );
+      if (index >= 0) {
+        updatedInvitedUsers[index].status = newStatus;
+      }
+      updatedUser.invitedUsers = updatedInvitedUsers;
+
+      //updating owner user's invitedUsers
+      await updateUserInFirestore(email!, {
+        invitedUsers: updatedInvitedUsers,
+      });
+
+      //updating user's status
+      await updateUserInFirestore(record.email, {
+        status: newStatus,
+      });
+
+      setLoadingState((prevValues) => ({
+        ...prevValues,
+        blockLoading: false,
+      }));
+      // setUserData(newUser);
+      toast(`${record.name} ${newStatus} successfully`);
+    } catch (err) {
+      console.log(err);
+      toast("Something happened wrong", { type: "error" });
+      setLoadingState((prevValues) => ({
+        ...prevValues,
+        blockLoading: false,
+      }));
+    }
+  };
 
   const columns = [
     {
@@ -119,37 +172,64 @@ function InviteModal() {
               {loading ? <LoadingOutlined /> : "Re-Invite"}
             </a>
           ) : null}
-          {/* going to add this block and un-block feature {record.status == "active" ? (
-            <a>Block</a>
+
+          {record.status == "active" ? (
+            <a
+              title={`Click to block ${record.name}`}
+              onClick={(e) => handleBlockOrUnBlock(e, record, "block")}
+            >
+              {blockLoading ? <LoadingOutlined /> : "Block"}
+            </a>
           ) : (
-            record.status == "block" && <a>Un-Block</a>
-          )} */}
+            record.status == "block" && (
+              <a onClick={(e) => handleBlockOrUnBlock(e, record, "unblock")}>
+                {blockLoading ? <LoadingOutlined /> : "Un-Block"}
+              </a>
+            )
+          )}
+
           <Popconfirm
             okButtonProps={{
               title: "Delete",
-              loading,
+              loading: deleteLoading,
               style: { background: "red", color: "white" },
             }}
             title={`Are you sure that you want to delete this ${record.name}`}
             onConfirm={async (e) => {
               try {
                 e?.stopPropagation();
+                setLoadingState((prevValues) => ({
+                  ...prevValues,
+                  deleteLoading: true,
+                }));
                 const newUser = { ...user };
-                setInviteModalState({ loading: true });
                 const newInvitedUsers = invitedUsers?.filter(
                   (i) => i.email != record.email
                 );
+
+                // removing user from the invitedUser of the owner
                 await updateUserInFirestore(email!, {
                   invitedUsers: newInvitedUsers,
                 });
+
+                await updateUserInFirestore(record.email, {
+                  invitedBy: null,
+                });
+
                 newUser.invitedUsers = newInvitedUsers;
-                toast(`Member ${record.name} deleted successfully`);
-                setInviteModalState({ loading: false });
+                setLoadingState((prevValues) => ({
+                  ...prevValues,
+                  deleteLoading: false,
+                }));
                 setUserData(newUser);
+                toast(`Member ${record.name} deleted successfully`);
               } catch (err) {
                 console.log(err);
                 toast("something happened wrong");
-                setInviteModalState({ loading: false });
+                setLoadingState((prevValues) => ({
+                  ...prevValues,
+                  deleteLoading: false,
+                }));
               }
             }}
           >
@@ -162,6 +242,7 @@ function InviteModal() {
     },
   ];
 
+  console.log({ invitedUsers });
   return (
     <Modal
       open={isOpen}
@@ -205,6 +286,7 @@ function InviteModal() {
             </div>
 
             <Table
+              rowKey={(record) => record.id}
               onRow={(record) => {
                 return {
                   onClick: () => {

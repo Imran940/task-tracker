@@ -24,13 +24,13 @@ import {
 import { Button } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import { parse } from "url";
-import { InvitedUserType } from "@/typings";
+import { InvitedUserType, userType } from "@/typings";
+import { useUserStore } from "@/store/UserStore";
 
 const defaultLoginValue = { email: "", password: "" };
 let storedName: string | null;
 
 export default function Page() {
-
   const [loginData, setLoginData] = useState<{
     name?: string | null;
     email: string;
@@ -45,10 +45,18 @@ export default function Page() {
     loginLoading: boolean;
     resetLoading: boolean;
     registerLoading: boolean;
-  }>({ loginLoading: false, registerLoading: false, resetLoading: false });
+    googleLoading: boolean;
+  }>({
+    loginLoading: false,
+    registerLoading: false,
+    resetLoading: false,
+    googleLoading: false,
+  });
   const [showInvitedView, setShowInvitedView] = useState(false);
   const { email, password, name } = loginData;
-  const { loginLoading, registerLoading, resetLoading } = loadingState;
+  const { loginLoading, registerLoading, resetLoading, googleLoading } =
+    loadingState;
+  const { setLogOut } = useUserStore((state) => state);
 
   const params =
     typeof document !== "undefined" &&
@@ -57,6 +65,39 @@ export default function Page() {
       ? parse(location.search, true)
       : null;
   const { ownerEmail, userEmail } = params?.query || {};
+
+  const checkUserBlockOrNot = async (email: string | null) => {
+    if (!email) return;
+
+    const data = await getUserFromFirestore(email);
+    if (!data) return;
+
+    try {
+      //check for invitedBy field
+      let ownerUser;
+      if (data.invitedBy) {
+        ownerUser = await getUserFromFirestore(data.invitedBy);
+      }
+
+      if (!ownerUser && data?.role != "owner") {
+        await auth.signOut();
+        toast(
+          "You're no longer associate with any project. Kindly contact the owner of the project"
+        );
+        return "not-exist";
+      }
+
+      if (ownerUser && data?.status == "block") {
+        await auth.signOut();
+        toast("You have been blocked by the owner of the project");
+        return "blocked";
+      }
+      return "success";
+    } catch (err) {
+      console.log(err);
+      toast("something happened wrong", { type: "error" });
+    }
+  };
 
   useEffect(() => {
     if (sessionStorage.getItem("isLogin")) {
@@ -104,11 +145,18 @@ export default function Page() {
       setShowInvitedView(true);
     }
   }, []);
+
   const handleGoogleLogin = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
+    if (googleLoading) return;
+
     if (loginData.email || loginData.password) setLoginData(defaultLoginValue);
+    setLoadingState((prevValues) => ({
+      ...prevValues,
+      googleLoading: true,
+    }));
     signInWithPopup(auth, googleAuthProvider)
       .then(async (data) => {
         const userData = await getUserFromFirestore(data.user.email!);
@@ -118,6 +166,7 @@ export default function Page() {
             name: data.user.displayName!,
             role: "owner",
             signupMethods: ["google"],
+            status: "active",
           });
         }
         if (userData && !userData.signupMethods.includes("google")) {
@@ -126,17 +175,33 @@ export default function Page() {
           });
         }
 
-        toast(`Welcome to tracker ${data.user.displayName}!`, {
-          type: "success",
-        });
-        router.push("/");
+        const respone = await checkUserBlockOrNot(userData?.email);
+        if (respone == "success") {
+          toast(`Welcome to tracker ${data.user.displayName}!`, {
+            type: "success",
+          });
+          router.push("/");
+        }
+        setLoadingState((prevValues) => ({
+          ...prevValues,
+          googleLoading: false,
+        }));
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        setLoadingState((prevValues) => ({
+          ...prevValues,
+          googleLoading: false,
+        }));
+        toast("Something happened wrong", { type: "error" });
+      });
   };
 
   const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
+      if (registerLoading || loginLoading) return;
+
       setLoadingState((prevLoading) => ({
         ...prevLoading,
         ...(showSignUp ? { registerLoading: true } : { loginLoading: true }),
@@ -151,6 +216,7 @@ export default function Page() {
         }
 
         await updatePassword(user, password);
+
         // saving user in the firestore
         const userData = await getUserFromFirestore(user.email!);
         if (userData) {
@@ -163,6 +229,7 @@ export default function Page() {
             name: storedName!,
             role: "owner",
             signupMethods: ["email"],
+            status: "active",
           });
         }
 
@@ -256,6 +323,7 @@ export default function Page() {
             name: name!,
             signupMethods: ["email"],
             invitedBy: userData?.email,
+            status: "active",
           });
 
           //updating status in the owner invitedUsers array
@@ -269,14 +337,18 @@ export default function Page() {
       } else {
         if (!email || !password) return;
         const result = await signInWithEmailAndPassword(auth, email, password);
-        router.push("/");
-        toast(
-          `Welcome ${
-            result.user.displayName
-              ? result.user.displayName
-              : result.user.email
-          } `
-        );
+        const response = await checkUserBlockOrNot(email);
+
+        if (response == "success") {
+          router.push("/");
+          toast(
+            `Welcome ${
+              result.user.displayName
+                ? result.user.displayName
+                : result.user.email
+            } `
+          );
+        }
       }
 
       setLoadingState((prevLoading) => ({
@@ -301,6 +373,7 @@ export default function Page() {
       }));
     }
   };
+
   const handleToggle = () => setToggle((prevState) => !prevState);
   const formContent = (
     <>
@@ -483,7 +556,13 @@ export default function Page() {
               src="/images/google.jpg"
               className="w-[10%]   object-contain"
             />
-            <span>Sign With Gooogle</span>
+            {googleLoading ? (
+              <>
+                Loading <LoadingOutlined />{" "}
+              </>
+            ) : (
+              <span>Sign With Gooogle</span>
+            )}
           </button>
         ) : null}
       </div>
