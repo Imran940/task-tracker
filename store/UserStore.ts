@@ -1,21 +1,21 @@
-import { Board, InvitedUserType, ProjectRole, Todo } from "@/typings";
+import { Board, InvitedUserType, ProjectRole, Todo, userType } from "@/typings";
 import { create } from "zustand";
 import { groupTasksByStatus, mergeAllTasks } from "@/lib/helpers";
-interface UserDetailsState {
-  name: string | null;
-  email: string | null;
-  accessToken: string | null;
-  emailVerified: boolean;
-  profilePic?: string | null;
-  role?: ProjectRole;
-  invitedUsers?: InvitedUserType[];
-  tasks?: Todo[];
-  invitedBy?: string;
-}
+// interface UserDetailsState {
+//   name: string | null;
+//   email: string | null;
+//   accessToken: string | null;
+//   emailVerified: boolean;
+//   profilePic?: string | null;
+//   role?: ProjectRole;
+//   invitedUsers?: InvitedUserType[];
+//   tasks?: Todo[];
+//   invitedBy?: string;
+// }
 interface UserState {
-  user: UserDetailsState;
+  user: userType;
   isUserLogin: boolean;
-  setUserData: (user: UserDetailsState) => void;
+  setUserData: (user: userType) => void;
   setLogOut: () => void;
   board: Board;
   setBoard: (board: Board) => void;
@@ -23,12 +23,15 @@ interface UserState {
   tempBoard?: Board;
   searchString?: string;
 }
-const defaultUserValue: UserDetailsState = {
+const defaultUserValue: userType = {
   name: "",
   email: "",
   accessToken: "",
   emailVerified: false,
   tasks: [],
+  googleTokens: null,
+  role: "viewer",
+  status: "pending",
 };
 export const useUserStore = create<UserState>((set, get) => ({
   isUserLogin: false,
@@ -39,7 +42,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     done: [],
     columns: ["todo", "inprogress", "done"],
   },
-  setUserData: (user: UserDetailsState) => {
+  setUserData: (user) => {
     set({
       user,
       isUserLogin: true,

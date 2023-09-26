@@ -167,6 +167,7 @@ export default function Page() {
             role: "owner",
             signupMethods: ["google"],
             status: "active",
+            googleTokens: null,
           });
         }
         if (userData && !userData.signupMethods.includes("google")) {
@@ -230,6 +231,7 @@ export default function Page() {
             role: "owner",
             signupMethods: ["email"],
             status: "active",
+            googleTokens: null,
           });
         }
 
@@ -324,6 +326,7 @@ export default function Page() {
             signupMethods: ["email"],
             invitedBy: userData?.email,
             status: "active",
+            googleTokens: null,
           });
 
           //updating status in the owner invitedUsers array

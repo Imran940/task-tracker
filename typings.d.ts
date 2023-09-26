@@ -43,17 +43,17 @@ export interface sendMailPayload {
 
 export interface defaultUserType {
   email: string;
-  role?: ProjectRole;
+  role: ProjectRole;
   name: string;
   signupMethods?: ("google" | "email")[];
   status: "pending" | "active" | "block";
-  // googleTokens: {
-  //   access_token: string;
-  //   refresh_token: string;
-  //   token_type: string;
-  //   id_token: string;
-  //   expiry_date: number;
-  // };
+  googleTokens: {
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    id_token: string;
+    expiry_date: number;
+  } | null;
 }
 
 export type InvitedUserType = defaultUserType & {
@@ -63,6 +63,9 @@ export interface userType extends defaultUserType {
   invitedUsers?: InvitedUserType[];
   invitedBy?: string | null;
   tasks?: Todo[];
+  accessToken?: string | null;
+  emailVerified?: boolean;
+  profilePic?: string;
 }
 
 export interface ModalState {

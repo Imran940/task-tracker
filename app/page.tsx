@@ -34,23 +34,8 @@ export default function Home() {
           ownerUser = await getUserFromFirestore(data.invitedBy);
         }
 
-        // if (!ownerUser && data?.role != "owner") {
-        //   await auth.signOut();
-        //   setLogOut();
-        //   router.push("/login");
-        //   toast(
-        //     "You're no longer associate with any project. Kindly contact the owner of the project"
-        //   );
-        //   return;
-        // }
-
-        // if (ownerUser && data?.status == "block") {
-        //   await auth.signOut();
-        //   setLogOut();
-        //   router.push("/login");
-        //   toast("You have been blocked by the owner of the project");
-        //   return;
-        // }
+        if (data.googleTokens) {
+        }
 
         const userData = {
           name: user.displayName ? user.displayName : data?.name,

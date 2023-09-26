@@ -8,6 +8,7 @@ import {
   userType,
 } from "@/typings";
 import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { google } from "googleapis";
 
 export const mergeAllTasks = (board: Board) => {
   const allTodos = Object.values(board);
@@ -124,3 +125,10 @@ export const roleAccess: Record<ProjectRole, Access[]> = {
   viewer: [],
   owner: AllAccesses,
 };
+
+export const createAuthConnectionToGoogle = () =>
+  new google.auth.OAuth2(
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET,
+    `${process.env.HOST}/google-callback`
+  );

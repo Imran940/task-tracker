@@ -48,13 +48,9 @@ function InviteModal() {
 
   const { name, email, role, invitedUsers = [] } = user;
 
-  const [{ blockLoading, deleteLoading }, setLoadingState] = useState<{
-    blockLoading: boolean;
-    deleteLoading: boolean;
-  }>({
-    blockLoading: false,
-    deleteLoading: false,
-  });
+  const [loadingState, setLoadingState] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
   // check this update part of the status in the modal, it's updating as I want but I haven't understand how it's updated
   const handleBlockOrUnBlock = async (e, record, type: "block" | "unblock") => {
@@ -63,17 +59,18 @@ function InviteModal() {
     try {
       setLoadingState((prevValues) => ({
         ...prevValues,
-        blockLoading: true,
+        [record.id]: true,
       }));
       const updatedUser = { ...user };
-      const updatedInvitedUsers = updatedUser.invitedUsers?.length
-        ? [...updatedUser.invitedUsers]
-        : [];
+      const updatedInvitedUsers = [...invitedUsers];
       const index = updatedInvitedUsers.findIndex(
         (i) => i.email == record.email
       );
       if (index >= 0) {
-        updatedInvitedUsers[index].status = newStatus;
+        updatedInvitedUsers[index] = {
+          ...updatedInvitedUsers[index],
+          status: newStatus,
+        };
       }
       updatedUser.invitedUsers = updatedInvitedUsers;
 
@@ -87,18 +84,35 @@ function InviteModal() {
         status: newStatus,
       });
 
+      //send email to the user's email
+      await sendEmail({
+        email: record.email,
+        subject: newStatus == "active" ? "Un-Block Updates" : "Block Updates",
+        message: `
+          Hey <b>${
+            record.name
+          }</b>, ${name} the owner of the task management application has <b>${
+          newStatus == "active" ? "activated" : "blocked"
+        }</b> your account. <br/>
+          
+          ${
+            newStatus == "block" ? "Kindly talk to owner of the project." : ""
+          } Thank you :)
+        `,
+      });
+
       setLoadingState((prevValues) => ({
         ...prevValues,
-        blockLoading: false,
+        [record.id]: false,
       }));
-      // setUserData(newUser);
+      setUserData(updatedUser);
       toast(`${record.name} ${newStatus} successfully`);
     } catch (err) {
       console.log(err);
       toast("Something happened wrong", { type: "error" });
       setLoadingState((prevValues) => ({
         ...prevValues,
-        blockLoading: false,
+        [record.id]: false,
       }));
     }
   };
@@ -153,23 +167,32 @@ function InviteModal() {
               onClick={async (e) => {
                 try {
                   e.stopPropagation();
-                  setInviteModalState({ loading: true });
+                  setLoadingState((prevValues) => ({
+                    ...prevValues,
+                    [record.id]: true,
+                  }));
                   await sendEmail({
                     email: record.email,
                     subject: "Re-Invitation of task tracker",
                     message: `Hey <b>${record.name}</b>, ${name} the owner of the task management application is requesting you to visit their project by clicking the below link and You got the role of <b>${record.role}</b><br/>
                 <a href=${process.env.NEXT_PUBLIC_HOST}/login/?ownerEmail=${email}&userEmail=${record.email}>Click here to go to project</a>`,
                   });
-                  setInviteModalState({ loading: false });
+                  setLoadingState((prevValues) => ({
+                    ...prevValues,
+                    [record.id]: false,
+                  }));
                   toast(`Re-Invitation sent successfully to ${record.email}`);
                 } catch (err) {
                   console.log(err);
-                  setInviteModalState({ loading: false });
+                  setLoadingState((prevValues) => ({
+                    ...prevValues,
+                    [record.id]: false,
+                  }));
                   toast("Something happened wrong", { type: "error" });
                 }
               }}
             >
-              {loading ? <LoadingOutlined /> : "Re-Invite"}
+              {loadingState[record.id] ? <LoadingOutlined /> : "Re-Invite"}
             </a>
           ) : null}
 
@@ -178,12 +201,12 @@ function InviteModal() {
               title={`Click to block ${record.name}`}
               onClick={(e) => handleBlockOrUnBlock(e, record, "block")}
             >
-              {blockLoading ? <LoadingOutlined /> : "Block"}
+              {loadingState[record.id] ? <LoadingOutlined /> : "Block"}
             </a>
           ) : (
             record.status == "block" && (
               <a onClick={(e) => handleBlockOrUnBlock(e, record, "unblock")}>
-                {blockLoading ? <LoadingOutlined /> : "Un-Block"}
+                {loadingState[record.id] ? <LoadingOutlined /> : "Un-Block"}
               </a>
             )
           )}
@@ -191,17 +214,15 @@ function InviteModal() {
           <Popconfirm
             okButtonProps={{
               title: "Delete",
-              loading: deleteLoading,
+              loading: loading,
               style: { background: "red", color: "white" },
             }}
+            onCancel={(e) => e?.stopPropagation()}
             title={`Are you sure that you want to delete this ${record.name}`}
             onConfirm={async (e) => {
               try {
                 e?.stopPropagation();
-                setLoadingState((prevValues) => ({
-                  ...prevValues,
-                  deleteLoading: true,
-                }));
+                setInviteModalState({ loading: true });
                 const newUser = { ...user };
                 const newInvitedUsers = invitedUsers?.filter(
                   (i) => i.email != record.email
@@ -217,19 +238,13 @@ function InviteModal() {
                 });
 
                 newUser.invitedUsers = newInvitedUsers;
-                setLoadingState((prevValues) => ({
-                  ...prevValues,
-                  deleteLoading: false,
-                }));
+                setInviteModalState({ loading: true });
                 setUserData(newUser);
                 toast(`Member ${record.name} deleted successfully`);
               } catch (err) {
                 console.log(err);
                 toast("something happened wrong");
-                setLoadingState((prevValues) => ({
-                  ...prevValues,
-                  deleteLoading: false,
-                }));
+                setInviteModalState({ loading: true });
               }
             }}
           >
@@ -242,7 +257,6 @@ function InviteModal() {
     },
   ];
 
-  console.log({ invitedUsers });
   return (
     <Modal
       open={isOpen}
@@ -288,6 +302,7 @@ function InviteModal() {
             <Table
               rowKey={(record) => record.id}
               onRow={(record) => {
+                console.log({ record });
                 return {
                   onClick: () => {
                     setFieldValues(record);

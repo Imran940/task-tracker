@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.log(err);
     return NextResponse.json({
-      data: `something happend wrong`,
+      data: `something happened wrong`,
     });
   }
 }
