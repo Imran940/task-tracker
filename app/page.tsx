@@ -4,14 +4,17 @@ const DynamicBoard = dynamic(() => import("@/components/Board"), {
   ssr: false,
 });
 import { auth } from "@/firebase";
-import { getUserFromFirestore } from "@/lib/helpers";
+import { getGoolgeCalendarAuthUrl, getUserFromFirestore } from "@/lib/helpers";
+import { useModalStore } from "@/store/ModalStore";
 import { useUserStore } from "@/store/UserStore";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function Home() {
   const { setUserData, setLogOut } = useUserStore((state) => state);
+  const { toggleModal, setGoogleAuthUrl } = useModalStore((state) => state);
   const router = useRouter();
 
   useEffect(() => {
@@ -34,7 +37,18 @@ export default function Home() {
           ownerUser = await getUserFromFirestore(data.invitedBy);
         }
 
-        if (data.googleTokens) {
+        try {
+          if (!data.googleTokens) {
+            const resp = await getGoolgeCalendarAuthUrl();
+            setGoogleAuthUrl(resp?.data);
+            toggleModal("showAuthModal");
+          }
+
+          if (data.googleTokens?.expiry_date < Date.now()) {
+          }
+        } catch (err) {
+          console.log(err);
+          toast("Something happened wrong", { type: "error" });
         }
 
         const userData = {

@@ -8,7 +8,7 @@ import {
   userType,
 } from "@/typings";
 import { collection, doc, getDoc, setDoc } from "firebase/firestore";
-import { google } from "googleapis";
+
 
 export const mergeAllTasks = (board: Board) => {
   const allTodos = Object.values(board);
@@ -126,9 +126,23 @@ export const roleAccess: Record<ProjectRole, Access[]> = {
   owner: AllAccesses,
 };
 
-export const createAuthConnectionToGoogle = () =>
-  new google.auth.OAuth2(
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET,
-    `${process.env.HOST}/google-callback`
-  );
+export const refreshGoogleTokens = async (payload: {
+  expiry_date: number;
+  email: string;
+}) => {
+  const res = await fetch("/api/refresh_google_token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  return data;
+};
+
+export const getGoolgeCalendarAuthUrl = async () => {
+  const res = await fetch("/api/send_auth_url");
+  const data = await res.json();
+  return data;
+};

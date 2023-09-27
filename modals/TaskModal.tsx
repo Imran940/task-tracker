@@ -279,7 +279,12 @@ function TaskModal() {
   };
 
   return (
-    <Modal open={isOpen} footer={null} onCancel={toggleModal} width={1200}>
+    <Modal
+      open={isOpen}
+      footer={null}
+      onCancel={() => toggleModal()}
+      width={1200}
+    >
       <div style={{ margin: "30px 15px" }}>
         <span className="text-lg font-bold uppercase">{openType} a task</span>
         <div

@@ -14,7 +14,7 @@ interface InviteModalTypes {
 }
 interface ModalState {
   isOpen: boolean;
-  toggleModal: () => void;
+  toggleModal: (value?: "showAuthModal") => void;
   taskFields: Todo;
   setTaskFields: (
     value: Partial<Todo>,
@@ -22,9 +22,11 @@ interface ModalState {
   ) => void;
   resetAddTaskFields: () => void;
   openType?: "edit" | "add" | "view";
-
+  showAuthModal?: boolean;
   inviteModalStates: InviteModalTypes;
   setInviteModalState: (value: Partial<InviteModalTypes>) => void;
+  googleAuthUrl?: string | undefined;
+  setGoogleAuthUrl: (value: string | undefined) => void;
 }
 
 const defaultTaskFieldValues: Todo = {
@@ -49,13 +51,14 @@ const defaultInviteFieldValues: InvitedUserType = {
   email: "",
   role: "viewer",
   status: "pending",
+  googleTokens: null,
 };
 
 export const useModalStore = create<ModalState>((set, get) => ({
   isOpen: false,
   isInviteOpen: false,
   openType: "view",
-  toggleModal: () => set({ isOpen: !get().isOpen }),
+  toggleModal: (value) => set({ [value ? value : "isOpen"]: !get().isOpen }),
 
   inviteModalStates: {
     isOpen: false,
@@ -106,5 +109,10 @@ export const useModalStore = create<ModalState>((set, get) => ({
       taskFields: {
         ...defaultTaskFieldValues,
       },
+    }),
+
+  setGoogleAuthUrl: (value) =>
+    set({
+      googleAuthUrl: value,
     }),
 }));

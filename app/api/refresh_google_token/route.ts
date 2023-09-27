@@ -1,8 +1,13 @@
-import {
-  createAuthConnectionToGoogle,
-  updateUserInFirestore,
-} from "@/lib/helpers";
+import { updateUserInFirestore } from "@/lib/helpers";
+import { google } from "googleapis";
 import { NextResponse } from "next/server";
+
+export const createAuthConnectionToGoogle = () =>
+  new google.auth.OAuth2(
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET,
+    `${process.env.NEXT_PUBLIC_HOST}/api/google_callback`
+  );
 
 export async function POST(request: Request) {
   try {

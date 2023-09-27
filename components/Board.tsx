@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DragDropContext, DropResult, Droppable } from "react-beautiful-dnd";
 import Column from "./Column";
 import Header from "./Header";
 import { useUserStore } from "@/store/UserStore";
 import { updateUserInFirestore } from "@/lib/helpers";
+import { useModalStore } from "@/store/ModalStore";
+import { Modal } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 function Board() {
   const {
@@ -14,6 +17,9 @@ function Board() {
     setBoard,
     tempBoard,
   } = useUserStore((state) => state);
+
+  const { showAuthModal, googleAuthUrl } = useModalStore((state) => state);
+  const [loading, setLoading] = useState(false);
 
   const handleOnDragEnd = async (result: DropResult) => {
     const { destination, type, source } = result;
@@ -77,6 +83,27 @@ function Board() {
   return (
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Header />
+      <Modal
+        closable={false}
+        footer
+        title="Authorize Your Google Calendar"
+        open={showAuthModal}
+      >
+        <button
+          //onClick={handleGoogleLogin}
+          className="p-3 my-6 rounded-md uppercase border-4 w-full   flex items-center justify-center gap-2"
+          onClick={() => window.open(googleAuthUrl)}
+        >
+          <img src="/images/google.jpg" className="w-[10%]   object-contain" />
+          {loading ? (
+            <>
+              Loading <LoadingOutlined />{" "}
+            </>
+          ) : (
+            <span>Authorize Calendar</span>
+          )}
+        </button>
+      </Modal>
       <Droppable droppableId="board" direction="horizontal" type="column">
         {(provided) => (
           <div
