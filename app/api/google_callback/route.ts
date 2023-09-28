@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAuthConnectionToGoogle } from "../refresh_google_token/route";
-import { NextApiRequest } from "next";
 import { google } from "googleapis";
+import { updateUserInFirestore } from "@/lib/helpers";
 
-export async function GET(request: NextApiRequest) {
+export async function POST(request: Request) {
   try {
+    const payload = await request.json();
     const oAuth2Client = createAuthConnectionToGoogle();
-    //@ts-expect-error ignore this check
-    const { tokens } = await oAuth2Client.getToken(request.query.code);
+    const { tokens } = await oAuth2Client.getToken(payload?.code);
     oAuth2Client.setCredentials(tokens);
     const people = google.people({ version: "v1", auth: oAuth2Client });
     const response = await people.people.get({
@@ -16,10 +16,15 @@ export async function GET(request: NextApiRequest) {
     });
     const emailAddresses = response.data?.emailAddresses;
     if (emailAddresses?.length) {
+      const email = emailAddresses[0].value;
+      if (email) await updateUserInFirestore(email, { googleTokens: tokens });
     }
+    return NextResponse.json({
+      data: tokens,
+    });
   } catch (err) {
     console.log(err);
-    NextResponse.json({
+    return NextResponse.json({
       data: "Something happened wrong",
     });
   }

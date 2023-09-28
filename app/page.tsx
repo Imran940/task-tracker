@@ -4,7 +4,11 @@ const DynamicBoard = dynamic(() => import("@/components/Board"), {
   ssr: false,
 });
 import { auth } from "@/firebase";
-import { getGoolgeCalendarAuthUrl, getUserFromFirestore } from "@/lib/helpers";
+import {
+  getGoolgeCalendarAuthUrl,
+  getUserFromFirestore,
+  refreshGoogleTokens,
+} from "@/lib/helpers";
 import { useModalStore } from "@/store/ModalStore";
 import { useUserStore } from "@/store/UserStore";
 import dynamic from "next/dynamic";
@@ -45,6 +49,9 @@ export default function Home() {
           }
 
           if (data.googleTokens?.expiry_date < Date.now()) {
+            const refreshGoogleResp = await refreshGoogleTokens(data.email);
+            //@ts-expect-error ignore this refreshGoogleResp
+            setUserData({ googleTokens: refreshGoogleResp.data });
           }
         } catch (err) {
           console.log(err);

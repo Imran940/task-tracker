@@ -2,7 +2,15 @@
 import { useState } from "react";
 
 import { useModalStore } from "@/store/ModalStore";
-import { Image, Priority, Todo, TypeColumns, sendMailPayload } from "@/typings";
+import {
+  CalendarEventPayloadTypes,
+  Image,
+  Priority,
+  Todo,
+  TypeColumns,
+  googleTokensType,
+  sendMailPayload,
+} from "@/typings";
 import {
   Input,
   Modal,
@@ -28,7 +36,11 @@ import { useUserStore } from "@/store/UserStore";
 import moment from "moment";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { sendEmail, updateUserInFirestore } from "@/lib/helpers";
+import {
+  getUserFromFirestore,
+  sendEmail,
+  updateUserInFirestore,
+} from "@/lib/helpers";
 import dayjs from "dayjs";
 
 const { PreviewGroup } = AntdImage;
@@ -136,6 +148,7 @@ function TaskModal() {
           payload.images[index].imageRef = JSON.stringify(i.imageRef);
         });
       }
+
       if (isUpdate) {
         const index = newTasks.findIndex((n) => n.id == id);
         if (index >= 0) {
@@ -153,6 +166,35 @@ function TaskModal() {
         tasks: newTasks,
       });
 
+      // get the assignee's info
+      const assigneeUser = await getUserFromFirestore(payload.assignee.email);
+      if (assigneeUser?.googleTokens) {
+        const taskStartDate = moment(payload.endDate, "YYYY-MM-DD HH:mm")
+          .subtract(1, "hour")
+          .format();
+        const taskEndDate = moment(
+          payload.endDate,
+          "YYYY-MM-DD HH:mm"
+        ).format();
+
+        console.log({ taskEndDate, taskStartDate });
+        let calendarEventPayload: CalendarEventPayloadTypes = {
+          summary: payload.title,
+          description:
+            "This is reminder for the above task from the task tracker application",
+          taskStartDate,
+          taskEndDate,
+          tokens: assigneeUser?.googleTokens,
+        };
+
+        await fetch("/api/add_calendar_event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "applicaiton/json",
+          },
+          body: JSON.stringify(calendarEventPayload),
+        });
+      }
       //sending mail to the user for the task update or add
       let payloadData: sendMailPayload = {
         email: payload.assignee.email,

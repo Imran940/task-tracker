@@ -35,7 +35,6 @@ function Header() {
 
   // }, [board]);
 
-  console.log({ isOpen });
   return (
     <header className="mb-10">
       {isOpen ? <InviteModal /> : null}

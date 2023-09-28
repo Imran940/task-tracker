@@ -53,6 +53,7 @@ function InviteModal() {
   );
 
   // check this update part of the status in the modal, it's updating as I want but I haven't understand how it's updated
+  // @ts-expect-error ignore e and record type
   const handleBlockOrUnBlock = async (e, record, type: "block" | "unblock") => {
     e.stopPropagation();
     const newStatus = type == "unblock" ? "active" : "block";

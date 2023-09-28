@@ -47,14 +47,16 @@ export interface defaultUserType {
   name: string;
   signupMethods?: ("google" | "email")[];
   status: "pending" | "active" | "block";
-  googleTokens: {
-    access_token: string;
-    refresh_token: string;
-    token_type: string;
-    id_token: string;
-    expiry_date: number;
-  } | null;
+  googleTokens: googleTokensType | null;
 }
+
+export type googleTokensType = {
+  access_token?: string | null;
+  refresh_token?: string | null;
+  token_type?: string | null;
+  id_token?: string | null;
+  expiry_date?: number | null;
+};
 
 export type InvitedUserType = defaultUserType & {
   id: UUID | string;
@@ -71,4 +73,16 @@ export interface userType extends defaultUserType {
 export interface ModalState {
   open: boolean;
   loading: boolean;
+}
+
+export interface CalendarEventPayloadTypes {
+  summary: string;
+  description: string;
+  taskStartDate: string;
+  taskEndDate: string;
+  reminders?: {
+    useDefault: boolean;
+    overrides: { method: "popup" | "email"; minutes: number }[];
+  };
+  tokens: googleTokensType;
 }
