@@ -420,7 +420,11 @@ export default function Page() {
         <input
           name="password"
           type={toggle ? "text" : "password"}
-          placeholder="Enter your password"
+          placeholder={
+            !isEmailVerified && showSignUp && !showInvitedView
+              ? "Verify your email first"
+              : "Enter your password"
+          }
           className={`password w-full outline-none border-2 focus:border focus:border-blue-900 rounded-md p-2 ${
             !isEmailVerified && showSignUp && !showInvitedView
               ? "cursor-not-allowed"
@@ -438,7 +442,7 @@ export default function Page() {
             !showInvitedView && {
               disabled: !isEmailVerified,
               title: !isEmailVerified
-                ? "Enter and Verify Your Email Address."
+                ? "Click on the register button with name and email, verify your email address first then password will be enabled"
                 : "Please Enter 6 or more characters password",
             })}
           required={showSignUp && !isEmailVerified ? false : true}

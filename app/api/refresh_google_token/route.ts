@@ -12,7 +12,7 @@ export const createAuthConnectionToGoogle = () =>
 export async function POST(request: Request) {
   try {
     const { payload } = await request.json();
-    if (payload.expiry_data && payload.email) {
+    if (payload.email) {
       const oAuth2Client = createAuthConnectionToGoogle();
       //@ts-expect-error tokens will be there
       const { tokens } = await oAuth2Client.refreshAccessToken();
