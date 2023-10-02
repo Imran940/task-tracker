@@ -11,14 +11,19 @@ export const createAuthConnectionToGoogle = () =>
 
 export async function POST(request: Request) {
   try {
-    const { payload } = await request.json();
-    if (payload.email) {
+    const payload = await request.json();
+    console.log(payload);
+    if (payload.email && payload.refreshToken) {
       const oAuth2Client = createAuthConnectionToGoogle();
-      //@ts-expect-error tokens will be there
-      const { tokens } = await oAuth2Client.refreshAccessToken();
-      await updateUserInFirestore(payload.email, { googleTokens: tokens });
+      oAuth2Client.setCredentials({ refresh_token: payload.refreshToken });
+      const response = await oAuth2Client.refreshAccessToken();
+      console.log(response.credentials);
+
+      await updateUserInFirestore(payload.email, {
+        googleTokens: response.credentials,
+      });
       return NextResponse.json({
-        data: tokens,
+        data: response.credentials,
       });
     } else {
       throw new Error(

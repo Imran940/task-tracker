@@ -4,22 +4,18 @@ const DynamicBoard = dynamic(() => import("@/components/Board"), {
   ssr: false,
 });
 import { auth } from "@/firebase";
-import {
-  getGoolgeCalendarAuthUrl,
-  getUserFromFirestore,
-  refreshGoogleTokens,
-} from "@/lib/helpers";
-import { useModalStore } from "@/store/ModalStore";
+import { getUserFromFirestore, refreshGoogleTokens } from "@/lib/helpers";
 import { useUserStore } from "@/store/UserStore";
+import { Spin } from "antd";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Home() {
   const { setUserData, setLogOut } = useUserStore((state) => state);
-  const { toggleModal, setGoogleAuthUrl } = useModalStore((state) => state);
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     auth.onAuthStateChanged(async (user) => {
@@ -28,6 +24,7 @@ export default function Home() {
         router.push("/login");
         return;
       }
+      setLoading(true);
 
       const data = await getUserFromFirestore(user?.email!);
       if (!data) {
@@ -42,14 +39,14 @@ export default function Home() {
         }
 
         try {
-          if (!data.googleTokens) {
-            const resp = await getGoolgeCalendarAuthUrl();
-            setGoogleAuthUrl(resp?.data);
-            toggleModal("showAuthModal");
-          }
-
-          if (data.googleTokens?.expiry_date < Date.now()) {
-            const refreshGoogleResp = await refreshGoogleTokens(data.email);
+          if (
+            data.googleTokens?.expiry_date < Date.now() &&
+            data.googleTokens?.refresh_token
+          ) {
+            const refreshGoogleResp = await refreshGoogleTokens(
+              data.email,
+              data.googleTokens.refresh_token
+            );
             //@ts-expect-error ignore this refreshGoogleResp
             setUserData({ googleTokens: refreshGoogleResp.data });
           }
@@ -75,13 +72,20 @@ export default function Home() {
               }),
         };
         setUserData(userData);
+        setLoading(false);
       }
     });
   }, []);
 
   return (
     <main>
-      <DynamicBoard />
+      {loading ? (
+        <Spin tip="Please wait for a sec">
+          <div className="w-full h-screen flex items-center justify-center" />
+        </Spin>
+      ) : (
+        <DynamicBoard />
+      )}
     </main>
   );
 }

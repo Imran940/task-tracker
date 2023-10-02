@@ -26,6 +26,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { parse } from "url";
 import { InvitedUserType, userType } from "@/typings";
 import { useUserStore } from "@/store/UserStore";
+import Image from "next/image";
 
 const defaultLoginValue = { email: "", password: "" };
 let storedName: string | null;
@@ -559,7 +560,10 @@ export default function Page() {
             onClick={handleGoogleLogin}
             className="p-3 rounded-md uppercase border-2 w-full  lg:w-3/4 flex items-center justify-center gap-2"
           >
-            <img
+            <Image
+              alt="google-logo"
+              width={50}
+              height={50}
               src="/images/google.jpg"
               className="w-[10%]   object-contain"
             />

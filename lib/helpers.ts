@@ -126,14 +126,17 @@ export const roleAccess: Record<ProjectRole, Access[]> = {
   owner: AllAccesses,
 };
 
-export const refreshGoogleTokens = async (email: string) => {
+export const refreshGoogleTokens = async (
+  email: string,
+  refreshToken: string
+) => {
   if (!email) return;
   const res = await fetch("/api/refresh_google_token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, refreshToken }),
   });
   const data = await res.json();
   return data;

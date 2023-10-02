@@ -29,6 +29,7 @@ function Page() {
             body: JSON.stringify(payload),
           });
           const result = await response.json();
+          console.log({ result });
           //@ts-expect-error ignore this check for the result.data
           setUserData({ googleTokens: result.data });
           router.push("/");

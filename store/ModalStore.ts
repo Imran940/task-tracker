@@ -58,7 +58,8 @@ export const useModalStore = create<ModalState>((set, get) => ({
   isOpen: false,
   isInviteOpen: false,
   openType: "view",
-  toggleModal: (value) => set({ [value ? value : "isOpen"]: !get().isOpen }),
+  toggleModal: (value) =>
+    set({ [value ? value : "isOpen"]: !get()[value ? value : "isOpen"] }),
 
   inviteModalStates: {
     isOpen: false,

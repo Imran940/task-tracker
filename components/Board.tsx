@@ -18,7 +18,9 @@ function Board() {
     tempBoard,
   } = useUserStore((state) => state);
 
-  const { showAuthModal, googleAuthUrl } = useModalStore((state) => state);
+  const { showAuthModal, googleAuthUrl, toggleModal } = useModalStore(
+    (state) => state
+  );
   const [loading, setLoading] = useState(false);
 
   const handleOnDragEnd = async (result: DropResult) => {
@@ -84,7 +86,7 @@ function Board() {
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Header />
       <Modal
-        closable={false}
+        onCancel={() => toggleModal("showAuthModal")}
         footer
         title="Authorize Your Google Calendar"
         open={showAuthModal}

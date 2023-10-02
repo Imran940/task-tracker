@@ -4,25 +4,35 @@ import { auth } from "@/firebase";
 import { useUserStore } from "@/store/UserStore";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import Avatar from "react-avatar";
 import { toast } from "react-toastify";
 import InviteModal from "@/modals/InviteModal";
-import { roleAccess } from "@/lib/helpers";
-import { Popconfirm } from "antd";
+import { getGoolgeCalendarAuthUrl, roleAccess } from "@/lib/helpers";
+import { Popconfirm, Tooltip } from "antd";
 import { useModalStore } from "@/store/ModalStore";
+import {
+  LoadingOutlined,
+  LogoutOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
 
 function Header() {
   // const [suggestion, setSuggestion] = useState<string>("");
   const {
-    user: { name, email, profilePic, role, tasks },
+    user: { name, email, profilePic, role, tasks, googleTokens },
     setSearchString,
     searchString,
   } = useUserStore((state) => state);
   const {
     inviteModalStates: { isOpen },
     setInviteModalState,
+    toggleModal,
+    setGoogleAuthUrl,
+    googleAuthUrl,
   } = useModalStore((state) => state);
+  const [showMenu, setShowMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // useEffect(() => {
   //   //if (board.columns.size == 0) return;
@@ -35,6 +45,38 @@ function Header() {
 
   // }, [board]);
 
+  const handleGetAuthUrl = async () => {
+    try {
+      if (googleAuthUrl) {
+        toggleModal("showAuthModal");
+        return;
+      }
+      setLoading(true);
+      const resp = await getGoolgeCalendarAuthUrl();
+      setGoogleAuthUrl(resp?.data);
+      toggleModal("showAuthModal");
+      setLoading(false);
+    } catch (err) {
+      console.log(err);
+      toast("Something happened wrong", { type: "error" });
+      setLoading(false);
+    }
+  };
+
+  const AvatarElement = (
+    <Avatar
+      {...(profilePic && { src: profilePic })}
+      name={name ? name : email?.split("@")[0]}
+      round
+      color="#0055d1"
+      size="50"
+      className="cursor-pointer"
+      onClick={() => {
+        setShowMenu((preValue) => !preValue);
+        localStorage.setItem("showTooltip", "false");
+      }}
+    />
+  );
   return (
     <header className="mb-10">
       {isOpen ? <InviteModal /> : null}
@@ -49,30 +91,6 @@ function Header() {
         />
 
         <div className="flex items-center space-x-5 flex-1 justify-end w-full">
-          {roleAccess[role!]?.includes("invite") ? (
-            <span
-              onClick={() =>
-                setInviteModalState({ isOpen: true, openType: "view" })
-              }
-              className="text-lg cursor-pointer"
-            >
-              Show Members
-            </span>
-          ) : null}
-
-          <Popconfirm
-            title="Are you sure that you want to logout?"
-            okButtonProps={{
-              style: { background: "rgb(37 99 235)" },
-            }}
-            onConfirm={async () => {
-              await auth.signOut();
-              toast(`${name ? name : email} logged out!.`);
-            }}
-          >
-            <span className="text-lg text-red-600 cursor-pointer">Logout</span>
-          </Popconfirm>
-
           <form className="flex items-center w-full md:w-[30%] space-x-2 bg-white rounded-md p-2 shadow-md flex-1 md:flex-initial">
             <MagnifyingGlassIcon className="h-[8%] w-[8%] text-gray-400" />
             <input
@@ -87,13 +105,76 @@ function Header() {
             </button>
           </form>
 
-          <Avatar
-            {...(profilePic && { src: profilePic })}
-            name={name ? name : email?.split("@")[0]}
-            round
-            color="#0055d1"
-            size="50"
-          />
+          <div className="relative">
+            {!localStorage.getItem("showTooltip") ? (
+              <Tooltip
+                open={true}
+                title="Click me to open the menu!"
+                placement="bottom"
+                color="blue"
+              >
+                {AvatarElement}
+              </Tooltip>
+            ) : (
+              AvatarElement
+            )}
+
+            {showMenu ? (
+              <div className="absolute  bg-white w-[190px] p-3 right-3 top-16 z-10">
+                {roleAccess[role!]?.includes("invite") ? (
+                  <div
+                    onClick={() =>
+                      setInviteModalState({ isOpen: true, openType: "view" })
+                    }
+                    className="flex items-center  gap-4 cursor-pointer hover:bg-blue-500 hover:text-white p-2"
+                  >
+                    <UnorderedListOutlined />
+                    <span>All Members</span>
+                  </div>
+                ) : null}
+                <div
+                  className={`flex items-center  gap-4 cursor-pointer hover:bg-blue-500 hover:text-white p-2 ${
+                    googleTokens ? "bg-green-200 pointer-events-none" : "null"
+                  } `}
+                  onClick={handleGetAuthUrl}
+                >
+                  <Image
+                    alt="google-logo"
+                    src="/images/google.jpg"
+                    width={50}
+                    height={50}
+                    className="w-[10%]  object-contain"
+                  />
+                  <span>
+                    {googleTokens ? (
+                      "Authorized"
+                    ) : loading ? (
+                      <>
+                        Loading <LoadingOutlined className="ml-2" />
+                      </>
+                    ) : (
+                      "Auth Calendar"
+                    )}
+                  </span>
+                </div>
+                <Popconfirm
+                  title="Are you sure that you want to logout?"
+                  okButtonProps={{
+                    style: { background: "rgb(37 99 235)" },
+                  }}
+                  onConfirm={async () => {
+                    await auth.signOut();
+                    toast(`${name ? name : email} logged out!.`);
+                  }}
+                >
+                  <div className="flex items-center  gap-4 cursor-pointer hover:bg-red-600 hover:text-white p-2">
+                    <LogoutOutlined />
+                    <span>Logout</span>
+                  </div>
+                </Popconfirm>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
